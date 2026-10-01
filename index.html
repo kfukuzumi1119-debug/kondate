@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>きょうの献立｜冷蔵庫の食材から献立を提案する無料アプリ</title>
+<meta name="description" content="冷蔵庫の野菜や肉にチェックするだけで、主菜・副菜・汁物の献立を提案。和食・洋食・中華、調理時間でも絞り込めて、家庭料理80品の作り方つき。チェックなしならおまかせで決めます。">
+<link rel="canonical" href="https://kfukuzumi1119-debug.github.io/kondate/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="きょうの献立｜冷蔵庫の食材から献立を提案する無料アプリ">
+<meta property="og:description" content="冷蔵庫の野菜や肉にチェックするだけで、主菜・副菜・汁物の献立を提案。和食・洋食・中華、調理時間でも絞り込めて、家庭料理80品の作り方つき。チェックなしならおまかせで決めます。">
+<meta property="og:url" content="https://kfukuzumi1119-debug.github.io/kondate/">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"きょうの献立","url":"https://kfukuzumi1119-debug.github.io/kondate/","description":"冷蔵庫の野菜や肉にチェックするだけで、主菜・副菜・汁物の献立を提案。和食・洋食・中華、調理時間でも絞り込めて、家庭料理80品の作り方つき。チェックなしならおまかせで決めます。","applicationCategory":"LifestyleApplication","operatingSystem":"All","inLanguage":"ja","offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"}}
+</script>
+<style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yusei+Magic&family=Zen+Maru+Gothic:wght@400;500;700&display=swap">
+<style>
+/* Layout: 左に食材の買い物メモ風チェック、右に献立の三品カード。スマホでは縦積み */
+:root {
+  --bg: #f3f5ef;
+  --surface: #ffffff;
+  --fg: #22281f;
+  --muted: #646d5f;
+  --line: #dde2d6;
+  --leaf: #3d7547;
+  --leaf-soft: #e1ecdf;
+  --soy: #b8741f;
+  --soy-soft: #f6ead8;
+  /* 献立君：白い茶碗に藍の水玉。輪郭が濃いので両テーマで同じ色 */
+  --kun-line: #2b2622;
+  --kun-rice: #fffdf8;
+  --kun-bowl: #e9eef3;
+  --kun-band: #3f6f9c;
+  --kun-blush: #f2a0a0;
+  --kun-ume: #d9443e;
+  --font-display: "Yusei Magic", "Zen Maru Gothic", "Hiragino Maru Gothic ProN", sans-serif;
+  --font-body: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #171b16; --surface: #20261f; --fg: #e7ebe2; --muted: #9ba596; --line: #343c32;
+    --leaf: #7fbf89; --leaf-soft: #2a3b2b; --soy: #e0a556; --soy-soft: #3a2f20;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #171b16; --surface: #20261f; --fg: #e7ebe2; --muted: #9ba596; --line: #343c32;
+  --leaf: #7fbf89; --leaf-soft: #2a3b2b; --soy: #e0a556; --soy-soft: #3a2f20;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.7;
+  padding: 28px 16px 48px;
+}
+.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 24px; }
+header h1 {
+  font-family: var(--font-display); font-weight: 400; font-size: 2.1rem;
+  margin: 0; line-height: 1.2; text-wrap: balance;
+}
+header p { margin: 4px 0 0; color: var(--muted); }
+.cols { display: grid; gap: 24px; grid-template-columns: 1fr; }
+@media (min-width: 860px) {
+  .cols { grid-template-columns: 380px 1fr; align-items: start; }
+  .result { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); }
+}
+
+/* 食材 */
+.pantry { display: grid; gap: 18px; min-width: 0; }
+.group h2 {
+  font-size: 0.78rem; letter-spacing: 0.12em; color: var(--muted);
+  font-weight: 700; margin: 0 0 8px;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip input { position: absolute; opacity: 0; pointer-events: none; }
+.chip label {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 13px; border-radius: 999px;
+  border: 1.5px solid var(--line); background: var(--surface);
+  cursor: pointer; user-select: none; font-weight: 500;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.chip label::before {
+  content: ""; width: 14px; height: 14px; border-radius: 4px;
+  border: 1.5px solid var(--muted); flex: none;
+  transition: background .15s, border-color .15s;
+}
+.chip label:hover { border-color: var(--leaf); }
+.chip input:checked + label { background: var(--leaf-soft); border-color: var(--leaf); color: var(--fg); }
+.chip input:checked + label::before {
+  background: var(--leaf); border-color: var(--leaf);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size: 100%;
+}
+.chip input:focus-visible + label { outline: 2px solid var(--soy); outline-offset: 2px; }
+.times { display: flex; flex-wrap: wrap; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); padding: 3px; gap: 3px; }
+.time { flex: 1 1 auto; }
+.time input { position: absolute; opacity: 0; pointer-events: none; }
+.time label {
+  display: block; text-align: center; padding: 5px 10px; border-radius: 9px;
+  cursor: pointer; user-select: none; font-weight: 500; white-space: nowrap;
+  font-variant-numeric: tabular-nums; color: var(--muted);
+}
+.time label:hover { color: var(--fg); }
+.time input:checked + label { background: var(--soy-soft); color: var(--soy); font-weight: 700; }
+.time input:focus-visible + label { outline: 2px solid var(--soy); outline-offset: 1px; }
+.pantry-foot { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; color: var(--muted); font-size: 0.9rem; }
+
+/* ボタン */
+button {
+  font: inherit; cursor: pointer; border-radius: 10px;
+  border: 1.5px solid var(--line); background: var(--surface); color: var(--fg);
+  padding: 6px 14px; font-weight: 500;
+}
+button:hover { border-color: var(--leaf); }
+button:disabled { opacity: .45; cursor: not-allowed; border-color: var(--line); }
+button:focus-visible { outline: 2px solid var(--soy); outline-offset: 2px; }
+button.primary { background: var(--leaf); border-color: var(--leaf); color: var(--bg); font-weight: 700; padding: 10px 20px; }
+button.primary:hover { filter: brightness(1.08); }
+button.link { border: none; background: none; padding: 0; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+button.link:hover { color: var(--fg); }
+
+/* 献立 */
+.result { display: grid; gap: 14px; min-width: 0; }
+.about { border-top: 1.5px dashed var(--line); padding-top: 18px; color: var(--muted); font-size: 0.88rem; max-width: 65ch; }
+.about h2 { font-size: 0.95rem; color: var(--fg); margin: 0 0 6px; }
+.about p { margin: 0 0 6px; }
+.mode {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.mode-text { font-weight: 700; }
+.mode-text small { display: block; font-weight: 400; color: var(--muted); font-size: 0.85rem; }
+.tray {
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: 16px;
+  display: grid;
+}
+.dish {
+  display: grid; grid-template-columns: 1fr auto; gap: 4px 12px;
+  padding: 16px 18px; border-top: 1.5px dashed var(--line);
+}
+.dish:first-child { border-top: none; }
+.dish { cursor: pointer; transition: background .15s; }
+.dish:first-child { border-radius: 14px 14px 0 0; }
+.dish:last-child { border-radius: 0 0 14px 14px; }
+.dish:hover { background: var(--leaf-soft); }
+.dish:hover .dish-link { color: var(--leaf); text-decoration-color: var(--leaf); }
+.dish-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.slot {
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em;
+  padding: 1px 9px; border-radius: 6px; background: var(--soy-soft); color: var(--soy);
+}
+.dish-name { font-family: var(--font-display); font-size: 1.45rem; line-height: 1.35; }
+.mins { color: var(--muted); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.dish .swap { align-self: start; font-size: 0.85rem; padding: 4px 10px; }
+.ings { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.85rem; }
+.ing { padding: 0 8px; border-radius: 6px; border: 1px solid var(--line); color: var(--muted); }
+.ing.hit { background: var(--leaf-soft); border-color: var(--leaf); color: var(--fg); font-weight: 700; }
+.note {
+  font-size: 0.9rem; color: var(--muted); padding: 10px 14px;
+  border-radius: 10px; background: var(--surface); border: 1.5px solid var(--line);
+}
+.note b { color: var(--fg); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.8rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--line); display: inline-block; }
+.legend i.hit { background: var(--leaf-soft); border-color: var(--leaf); }
+/* 料理名のリンク */
+.dish-link {
+  font-family: var(--font-display); font-size: 1.45rem; line-height: 1.35; font-weight: 400;
+  border: none; background: none; padding: 0; text-align: left; color: var(--fg);
+  text-decoration: underline; text-decoration-color: var(--line);
+  text-decoration-thickness: 2px; text-underline-offset: 5px;
+}
+.dish-link:hover { color: var(--leaf); text-decoration-color: var(--leaf); }
+.dish-link::after { content: " ›"; color: var(--muted); font-family: var(--font-body); font-size: 1rem; }
+
+/* 作り方ページ */
+.recipe { display: grid; gap: 20px; min-width: 0; }
+.recipe-top { display: grid; gap: 6px; }
+.recipe-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; color: var(--muted); font-size: 0.9rem; }
+.recipe h2 {
+  font-family: var(--font-display); font-weight: 400; font-size: 2rem; line-height: 1.3;
+  margin: 0; text-wrap: balance;
+}
+.recipe-body { display: grid; gap: 20px; grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 760px) { .recipe-body { grid-template-columns: 300px 1fr; } }
+.recipe h3 { font-size: 0.85rem; letter-spacing: 0.12em; color: var(--muted); margin: 0 0 10px; }
+.stuff { background: var(--surface); border: 1.5px solid var(--line); border-radius: 14px; padding: 16px 18px; min-width: 0; }
+.stuff ul { list-style: none; margin: 0; padding: 0; display: grid; }
+.stuff li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+.stuff li:last-child { border-bottom: none; }
+.stuff li .qty { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.stuff li.have .name { color: var(--leaf); font-weight: 700; }
+.steps { min-width: 0; }
+.steps ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; counter-reset: step; }
+.steps li { counter-increment: step; display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; }
+.steps li::before {
+  content: counter(step); width: 30px; height: 30px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--leaf); color: var(--bg);
+  font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.steps li p { margin: 2px 0 0; }
+.recipe .kun-svg { width: 76px; height: 76px; }
+.more { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; font-size: 0.9rem; color: var(--muted); }
+.more a { color: var(--leaf); font-weight: 700; text-underline-offset: 3px; }
+
+/* 献立君 */
+.kun { display: flex; align-items: flex-end; gap: 10px; }
+.kun-svg { width: 92px; height: 92px; flex: none; overflow: visible; }
+.kun-svg .steam { fill: none; stroke: var(--muted); stroke-width: 2.5; stroke-linecap: round; opacity: .55; }
+.kun-svg .eye { transform-box: fill-box; transform-origin: center; }
+.bubble {
+  position: relative; flex: 1; min-width: 0; margin-bottom: 14px;
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: 14px;
+  padding: 8px 14px 10px;
+}
+.bubble::before {
+  content: ""; position: absolute; left: -8px; bottom: 14px; width: 13px; height: 13px;
+  background: var(--surface); border-left: 1.5px solid var(--line); border-bottom: 1.5px solid var(--line);
+  transform: rotate(45deg);
+}
+.bubble-name { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; color: var(--soy); }
+.bubble-text { margin: 0; font-weight: 500; }
+@media (prefers-reduced-motion: no-preference) {
+  .kun-svg.hop { animation: hop .5s ease-out; }
+  @keyframes hop { 0%,100% { transform: none; } 35% { transform: translateY(-8px) rotate(-4deg); } 65% { transform: translateY(0) rotate(3deg); } }
+  .kun-svg .eye { animation: blink 4.2s infinite; }
+  @keyframes blink { 0%,93%,100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+  .kun-svg .steam { animation: steam 3s ease-in-out infinite; }
+  .kun-svg .steam:nth-child(2) { animation-delay: .6s; }
+  .kun-svg .steam:nth-child(3) { animation-delay: 1.2s; }
+  @keyframes steam { 0%,100% { opacity: .2; transform: translateY(2px); } 50% { opacity: .65; transform: translateY(-3px); } }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tray.pop .dish { animation: pop .28s ease-out both; }
+  .tray.pop .dish:nth-child(2) { animation-delay: .05s; }
+  .tray.pop .dish:nth-child(3) { animation-delay: .1s; }
+  @keyframes pop { from { transform: translateY(4px); opacity: .4; } to { transform: none; opacity: 1; } }
+}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>きょうの献立</h1>
+    <p>冷蔵庫にある食材にチェック。何も選ばなければおまかせで決めます。</p>
+  </header>
+
+  <article class="recipe" id="recipeView" hidden></article>
+
+  <div class="cols" id="homeView">
+    <section class="pantry" id="pantry" aria-label="食材"></section>
+
+    <section class="result" aria-live="polite">
+      <div class="kun">
+        <svg class="kun-svg" id="kunSvg" viewBox="0 0 124 124" role="img" aria-label="献立君">
+          <g>
+            <path class="steam" d="M46 24c-5-5 5-8 0-15"/>
+            <path class="steam" d="M60 20c-5-5 5-8 0-15"/>
+            <path class="steam" d="M74 24c-5-5 5-8 0-15"/>
+          </g>
+          <!-- 箸を持つ右手 -->
+          <path d="M106 64 L119 30" stroke="var(--soy)" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M110 67 L123 35" stroke="var(--soy)" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M100 74 q10 0 11 -10" fill="none" stroke="var(--kun-line)" stroke-width="3.5" stroke-linecap="round"/>
+          <!-- 左手 -->
+          <path d="M20 74 q-11 1 -12 12" fill="none" stroke="var(--kun-line)" stroke-width="3.5" stroke-linecap="round"/>
+          <!-- ごはん -->
+          <path d="M24 62 C22 46 36 36 46 40 C50 29 70 29 74 40 C84 36 98 46 96 62 Z" fill="var(--kun-rice)" stroke="var(--kun-line)" stroke-width="3" stroke-linejoin="round"/>
+          <ellipse cx="38" cy="52" rx="2.4" ry="1.4" fill="var(--kun-line)" opacity=".18" transform="rotate(-25 38 52)"/>
+          <ellipse cx="82" cy="51" rx="2.4" ry="1.4" fill="var(--kun-line)" opacity=".18" transform="rotate(25 82 51)"/>
+          <circle cx="60" cy="42" r="6" fill="var(--kun-ume)" stroke="var(--kun-line)" stroke-width="2.5"/>
+          <!-- 茶碗 -->
+          <rect x="46" y="102" width="28" height="9" rx="3" fill="var(--kun-bowl)" stroke="var(--kun-line)" stroke-width="3"/>
+          <path d="M18 60 H102 C102 88 84 106 60 106 C36 106 18 88 18 60 Z" fill="var(--kun-bowl)"/>
+          <path d="M20 69 H100" stroke="var(--kun-band)" stroke-width="4" stroke-dasharray="1 7" stroke-linecap="round"/>
+          <path d="M18 60 H102 C102 88 84 106 60 106 C36 106 18 88 18 60 Z" fill="none" stroke="var(--kun-line)" stroke-width="3" stroke-linejoin="round"/>
+          <!-- 顔 -->
+          <ellipse class="eye" cx="47" cy="82" rx="3.4" ry="4.2" fill="var(--kun-line)"/>
+          <ellipse class="eye" cx="73" cy="82" rx="3.4" ry="4.2" fill="var(--kun-line)"/>
+          <ellipse cx="39" cy="91" rx="5" ry="3" fill="var(--kun-blush)" opacity=".85"/>
+          <ellipse cx="81" cy="91" rx="5" ry="3" fill="var(--kun-blush)" opacity=".85"/>
+          <path d="M54 88 Q60 95 66 88" fill="none" stroke="var(--kun-line)" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <div class="bubble">
+          <div class="bubble-name">献立君</div>
+          <p class="bubble-text" id="kunText"></p>
+        </div>
+      </div>
+      <div class="mode">
+        <div class="mode-text" id="modeText"></div>
+        <button class="primary" id="again" type="button">ほかの献立にする</button>
+      </div>
+      <div class="tray" id="tray"></div>
+      <div class="note" id="note"></div>
+      <div class="legend">
+        <span><i class="hit"></i>チェックした食材</span>
+        <span><i></i>ほかに使う食材</span>
+      </div>
+    </section>
+  </div>
+
+  <footer class="about">
+    <h2>このアプリについて</h2>
+    <p>「きょうの献立」は、冷蔵庫にある野菜や肉にチェックするだけで、主菜・副菜・汁物の組み合わせを提案する無料の献立アプリです。何もチェックしなければ、おまかせでランダムに決めます。</p>
+    <p>和食・洋食・中華のジャンルと、10分〜30分の調理時間で絞り込めます。肉じゃが、麻婆豆腐、豚汁など家庭料理80品の作り方（材料2人分）つき。毎日の献立が決まらないときや、余った食材を使い切りたいときにどうぞ。</p>
+  </footer>
+</div>
+
+<script>
+const GROUPS = [
+  { name: '野菜', items: ['キャベツ','玉ねぎ','にんじん','じゃがいも','大根','なす','ピーマン','トマト','ほうれん草','もやし','白菜','きのこ','ブロッコリー','ねぎ','かぼちゃ','きゅうり'] },
+  { name: '肉・魚', items: ['豚肉','鶏肉','牛肉','ひき肉','ベーコン','鮭','さば','えび','ツナ缶'] },
+  { name: '卵・豆腐など', items: ['卵','豆腐','油揚げ','厚揚げ','わかめ'] },
+];
+
+// t: main=主菜 / side=副菜 / soup=汁物、g: wa=和食 / yo=洋食 / ch=中華、m: 目安の調理時間(分)
+const DISHES = [
+  { n: '肉じゃが', t: 'main', g: 'wa', m: 30, i: ['豚肉','じゃがいも','玉ねぎ','にんじん'] },
+  { n: '豚の生姜焼き', t: 'main', g: 'wa', m: 15, i: ['豚肉','玉ねぎ','キャベツ'] },
+  { n: '豚こまともやしのポン酢炒め', t: 'main', g: 'wa', m: 10, i: ['豚肉','もやし'] },
+  { n: '豚バラ大根', t: 'main', g: 'wa', m: 30, i: ['豚肉','大根'] },
+  { n: '白菜と豚肉のミルフィーユ鍋', t: 'main', g: 'wa', m: 25, i: ['豚肉','白菜','きのこ'] },
+  { n: '鶏の照り焼き', t: 'main', g: 'wa', m: 20, i: ['鶏肉'] },
+  { n: '鶏の唐揚げ', t: 'main', g: 'wa', m: 30, i: ['鶏肉'] },
+  { n: '親子丼', t: 'main', g: 'wa', m: 15, i: ['鶏肉','卵','玉ねぎ'] },
+  { n: '鶏と大根の煮物', t: 'main', g: 'wa', m: 30, i: ['鶏肉','大根'] },
+  { n: '牛丼', t: 'main', g: 'wa', m: 15, i: ['牛肉','玉ねぎ'] },
+  { n: '厚揚げの肉みそ炒め', t: 'main', g: 'wa', m: 15, i: ['厚揚げ','ひき肉','ピーマン'] },
+  { n: '鮭の塩焼き', t: 'main', g: 'wa', m: 15, i: ['鮭'] },
+  { n: '鮭のホイル焼き', t: 'main', g: 'wa', m: 20, i: ['鮭','きのこ','玉ねぎ'] },
+  { n: 'さばの味噌煮', t: 'main', g: 'wa', m: 25, i: ['さば','ねぎ'] },
+
+  { n: 'ポークカレー', t: 'main', g: 'yo', m: 40, i: ['豚肉','じゃがいも','玉ねぎ','にんじん'] },
+  { n: 'チキンソテー', t: 'main', g: 'yo', m: 20, i: ['鶏肉'] },
+  { n: 'オムライス', t: 'main', g: 'yo', m: 25, i: ['鶏肉','卵','玉ねぎ'] },
+  { n: 'チキンのトマト煮', t: 'main', g: 'yo', m: 30, i: ['鶏肉','トマト','玉ねぎ','きのこ'] },
+  { n: 'ハンバーグ', t: 'main', g: 'yo', m: 30, i: ['ひき肉','玉ねぎ','卵'] },
+  { n: 'ロールキャベツ', t: 'main', g: 'yo', m: 40, i: ['ひき肉','キャベツ','玉ねぎ'] },
+  { n: '鮭のムニエル', t: 'main', g: 'yo', m: 15, i: ['鮭'] },
+  { n: 'えびとブロッコリーのガーリック炒め', t: 'main', g: 'yo', m: 15, i: ['えび','ブロッコリー'] },
+  { n: 'ベーコンとほうれん草のオムレツ', t: 'main', g: 'yo', m: 10, i: ['卵','ベーコン','ほうれん草'] },
+  { n: 'ツナとキャベツのペペロンチーノ', t: 'main', g: 'yo', m: 15, i: ['ツナ缶','キャベツ'] },
+  { n: 'ツナとじゃがいものグラタン', t: 'main', g: 'yo', m: 30, i: ['ツナ缶','じゃがいも','玉ねぎ'] },
+
+  { n: '回鍋肉', t: 'main', g: 'ch', m: 15, i: ['豚肉','キャベツ','ピーマン'] },
+  { n: '肉野菜炒め', t: 'main', g: 'ch', m: 10, i: ['豚肉','キャベツ','もやし','にんじん','ピーマン'] },
+  { n: '八宝菜', t: 'main', g: 'ch', m: 20, i: ['豚肉','白菜','にんじん','えび','きのこ'] },
+  { n: '鶏むねとブロッコリーの塩炒め', t: 'main', g: 'ch', m: 15, i: ['鶏肉','ブロッコリー'] },
+  { n: '青椒肉絲', t: 'main', g: 'ch', m: 15, i: ['牛肉','ピーマン'] },
+  { n: '麻婆豆腐', t: 'main', g: 'ch', m: 15, i: ['ひき肉','豆腐','ねぎ'] },
+  { n: '麻婆なす', t: 'main', g: 'ch', m: 20, i: ['ひき肉','なす','ねぎ'] },
+  { n: 'えびチリ', t: 'main', g: 'ch', m: 20, i: ['えび','ねぎ','卵'] },
+  { n: '天津飯', t: 'main', g: 'ch', m: 15, i: ['卵','ねぎ'] },
+
+  { n: 'ほうれん草のおひたし', t: 'side', g: 'wa', m: 5, i: ['ほうれん草'] },
+  { n: 'にんじんしりしり', t: 'side', g: 'wa', m: 10, i: ['にんじん','卵','ツナ缶'] },
+  { n: 'キャベツの塩昆布あえ', t: 'side', g: 'wa', m: 5, i: ['キャベツ'] },
+  { n: '大根サラダ', t: 'side', g: 'wa', m: 5, i: ['大根','わかめ'] },
+  { n: '大根と油揚げの煮物', t: 'side', g: 'wa', m: 20, i: ['大根','油揚げ'] },
+  { n: 'なすの揚げびたし', t: 'side', g: 'wa', m: 15, i: ['なす'] },
+  { n: 'きゅうりの浅漬け', t: 'side', g: 'wa', m: 5, i: ['きゅうり'] },
+  { n: 'きゅうりとわかめの酢の物', t: 'side', g: 'wa', m: 5, i: ['きゅうり','わかめ'] },
+  { n: 'かぼちゃの煮物', t: 'side', g: 'wa', m: 20, i: ['かぼちゃ'] },
+  { n: 'ブロッコリーのごまあえ', t: 'side', g: 'wa', m: 5, i: ['ブロッコリー'] },
+  { n: 'きのこのバター醤油炒め', t: 'side', g: 'wa', m: 10, i: ['きのこ'] },
+  { n: '白菜の浅漬け', t: 'side', g: 'wa', m: 5, i: ['白菜'] },
+  { n: '冷ややっこ', t: 'side', g: 'wa', m: 3, i: ['豆腐','ねぎ'] },
+  { n: 'だし巻き卵', t: 'side', g: 'wa', m: 10, i: ['卵'] },
+
+  { n: 'ほうれん草とベーコンのソテー', t: 'side', g: 'yo', m: 10, i: ['ほうれん草','ベーコン'] },
+  { n: 'ポテトサラダ', t: 'side', g: 'yo', m: 20, i: ['じゃがいも','きゅうり','にんじん','卵'] },
+  { n: 'ジャーマンポテト', t: 'side', g: 'yo', m: 15, i: ['じゃがいも','ベーコン','玉ねぎ'] },
+  { n: 'コールスロー', t: 'side', g: 'yo', m: 10, i: ['キャベツ','にんじん'] },
+  { n: 'トマトと玉ねぎのサラダ', t: 'side', g: 'yo', m: 5, i: ['トマト','玉ねぎ'] },
+  { n: 'かぼちゃサラダ', t: 'side', g: 'yo', m: 15, i: ['かぼちゃ','玉ねぎ'] },
+  { n: 'ブロッコリーのガーリックソテー', t: 'side', g: 'yo', m: 5, i: ['ブロッコリー'] },
+  { n: 'きのこのマリネ', t: 'side', g: 'yo', m: 10, i: ['きのこ','玉ねぎ'] },
+
+  { n: 'トマトと卵の炒め物', t: 'side', g: 'ch', m: 10, i: ['トマト','卵'] },
+  { n: 'もやしのナムル', t: 'side', g: 'ch', m: 5, i: ['もやし'] },
+  { n: 'ピーマンとツナのうま塩炒め', t: 'side', g: 'ch', m: 5, i: ['ピーマン','ツナ缶'] },
+  { n: 'きゅうりの中華あえ', t: 'side', g: 'ch', m: 5, i: ['きゅうり'] },
+  { n: 'バンバンジー', t: 'side', g: 'ch', m: 15, i: ['鶏肉','きゅうり'] },
+  { n: '春雨サラダ', t: 'side', g: 'ch', m: 10, i: ['きゅうり','にんじん','卵'] },
+
+  { n: '豆腐とわかめの味噌汁', t: 'soup', g: 'wa', m: 10, i: ['豆腐','わかめ','ねぎ'] },
+  { n: '大根と油揚げの味噌汁', t: 'soup', g: 'wa', m: 10, i: ['大根','油揚げ'] },
+  { n: '豚汁', t: 'soup', g: 'wa', m: 25, i: ['豚肉','大根','にんじん','ねぎ'] },
+  { n: 'なすの味噌汁', t: 'soup', g: 'wa', m: 10, i: ['なす','ねぎ'] },
+  { n: 'じゃがいもと玉ねぎの味噌汁', t: 'soup', g: 'wa', m: 15, i: ['じゃがいも','玉ねぎ'] },
+  { n: 'きのこと豆腐の味噌汁', t: 'soup', g: 'wa', m: 10, i: ['きのこ','豆腐'] },
+  { n: '白菜と油揚げの味噌汁', t: 'soup', g: 'wa', m: 10, i: ['白菜','油揚げ'] },
+
+  { n: 'ミネストローネ', t: 'soup', g: 'yo', m: 25, i: ['トマト','玉ねぎ','にんじん','キャベツ','ベーコン'] },
+  { n: 'キャベツとベーコンのコンソメスープ', t: 'soup', g: 'yo', m: 15, i: ['キャベツ','ベーコン','玉ねぎ'] },
+  { n: 'かぼちゃのポタージュ', t: 'soup', g: 'yo', m: 25, i: ['かぼちゃ','玉ねぎ'] },
+  { n: 'オニオンスープ', t: 'soup', g: 'yo', m: 15, i: ['玉ねぎ'] },
+  { n: '卵とトマトのコンソメスープ', t: 'soup', g: 'yo', m: 10, i: ['卵','トマト'] },
+
+  { n: 'かき玉スープ', t: 'soup', g: 'ch', m: 10, i: ['卵','ねぎ'] },
+  { n: 'トマトと卵の中華スープ', t: 'soup', g: 'ch', m: 10, i: ['トマト','卵'] },
+  { n: 'わかめスープ', t: 'soup', g: 'ch', m: 5, i: ['わかめ','ねぎ'] },
+  { n: 'もやしの中華スープ', t: 'soup', g: 'ch', m: 10, i: ['もやし','ねぎ'] },
+];
+
+
+// 作り方。s: 材料（2人分）、p: 手順、tip: 献立君のコツ
+const RECIPES = {
+  '肉じゃが': { s: ['豚こま肉 150g','じゃがいも 3個','玉ねぎ 1個','にんじん 1/2本','だし汁 300ml','しょうゆ・みりん 各大さじ2.5','砂糖 大さじ1.5','サラダ油 小さじ2'], p: ['野菜を一口大に切る。じゃがいもは水にさらす。','鍋に油を熱して豚肉を炒め、色が変わったら野菜を加えて炒める。','だし汁と調味料を入れ、落としぶたをして中火で15分煮る。','じゃがいもがやわらかくなったら火を止め、少しおいて味をなじませる。'], tip: '一度冷ますと味がしみておいしくなるよ。' },
+  '豚の生姜焼き': { s: ['豚ロース薄切り 200g','玉ねぎ 1/2個','キャベツ 2枚','しょうが（すりおろし） 小さじ2','しょうゆ・みりん・酒 各大さじ1.5','砂糖 小さじ1','片栗粉 少々','サラダ油 小さじ2'], p: ['調味料としょうがを混ぜてたれを作る。キャベツはせん切り、玉ねぎは薄切りにする。','豚肉に片栗粉を薄くまぶす。','フライパンに油を熱し、玉ねぎと豚肉を焼く。','火が通ったらたれを加えて絡め、キャベツと一緒に盛る。'], tip: '片栗粉をまぶすと、たれがよく絡むよ。' },
+  '豚こまともやしのポン酢炒め': { s: ['豚こま肉 150g','もやし 1袋','ポン酢 大さじ3','ごま油 小さじ2','塩こしょう 少々','小ねぎ（あれば） 少々'], p: ['豚肉に塩こしょうをふる。','フライパンにごま油を熱し、豚肉を炒める。','色が変わったらもやしを加え、強火でさっと炒める。','ポン酢を回し入れて全体に絡め、小ねぎを散らす。'], tip: 'もやしは炒めすぎないとシャキシャキだよ。' },
+  '豚バラ大根': { s: ['豚バラ薄切り 150g','大根 1/3本','しょうが 1かけ','水 300ml','しょうゆ 大さじ2.5','みりん・酒 各大さじ2','砂糖 大さじ1'], p: ['大根は2cm厚のいちょう切り、豚肉は4cm幅、しょうがは薄切りにする。','鍋で豚肉を炒め、脂が出てきたら大根を加えて炒める。','水・調味料・しょうがを入れ、落としぶたをして20分煮る。','ふたを取り、汁気が少なくなるまで煮からめる。'], tip: '大根を先にレンジで5分温めておくと早く煮えるよ。' },
+  '白菜と豚肉のミルフィーユ鍋': { s: ['豚バラ薄切り 200g','白菜 1/4株','きのこ 1パック','だし汁 400ml','しょうゆ・酒 各大さじ1','塩 少々','ポン酢 適量'], p: ['白菜と豚肉を交互に重ね、5cm幅に切る。','鍋に断面を上にして外側からぎゅっと詰め、すき間にきのこを入れる。','だし汁と調味料を注ぎ、ふたをして中火で15分煮る。','ポン酢をつけていただく。'], tip: 'すき間なく詰めると煮くずれしにくいよ。' },
+  '鶏の照り焼き': { s: ['鶏もも肉 1枚（300g）','しょうゆ・みりん・酒 各大さじ2','砂糖 小さじ2','サラダ油 小さじ1'], p: ['鶏肉の厚い部分を開き、皮にフォークで穴をあける。','フライパンに油を熱し、皮目から中火で焼く。焼き色がついたら返し、ふたをして5分焼く。','出てきた余分な脂をキッチンペーパーでふき取る。','調味料を加え、とろみが出るまで煮からめる。食べやすく切って盛る。'], tip: '脂をふき取ると、たれがしっかり絡むよ。' },
+  '鶏の唐揚げ': { s: ['鶏もも肉 1枚（300g）','しょうゆ 大さじ1.5','酒 大さじ1','しょうが・にんにく（すりおろし） 各小さじ1','片栗粉 大さじ4','揚げ油 適量'], p: ['鶏肉を一口大に切り、調味料をもみ込んで15分おく。','片栗粉をまぶす。','170℃の油で4分揚げて取り出し、4分休ませる。','190℃の油で1分揚げる。'], tip: '二度揚げすると外はカリッと、中はジューシーだよ。' },
+  '親子丼': { s: ['鶏もも肉 150g','玉ねぎ 1/2個','卵 3個','ごはん 2杯','だし汁 150ml','しょうゆ・みりん 各大さじ2','砂糖 小さじ2'], p: ['鶏肉は小さめの一口大、玉ねぎは薄切りにする。','小さめのフライパンにだし汁と調味料を煮立て、鶏肉と玉ねぎを5分煮る。','溶き卵を2回に分けて回し入れ、半熟になったら火を止める。','ごはんにのせる。'], tip: '卵は混ぜすぎないと、ふわとろになるよ。' },
+  '鶏と大根の煮物': { s: ['鶏もも肉 1枚','大根 1/3本','しょうが 1かけ','水 300ml','しょうゆ 大さじ2.5','みりん・酒 各大さじ2','砂糖 大さじ1','サラダ油 小さじ1'], p: ['鶏肉は一口大、大根は乱切り、しょうがは薄切りにする。','鍋に油を熱し、鶏肉を皮目から焼く。','大根を加えて炒め、水・調味料・しょうがを入れる。','落としぶたをして20分煮る。'] },
+  '牛丼': { s: ['牛こま肉 200g','玉ねぎ 1個','ごはん 2杯','だし汁 200ml','しょうゆ 大さじ3','みりん・酒 各大さじ2','砂糖 大さじ1','紅しょうが（お好みで）'], p: ['玉ねぎは1cm幅のくし形に切る。','鍋にだし汁と調味料を煮立て、玉ねぎを5分煮る。','牛肉をほぐしながら加え、アクを取りながら5分煮る。','ごはんにのせ、紅しょうがを添える。'], tip: '牛肉は最後に入れるとかたくならないよ。' },
+  '厚揚げの肉みそ炒め': { s: ['厚揚げ 1枚','豚ひき肉 100g','ピーマン 2個','みそ 大さじ1.5','砂糖・酒 各大さじ1','しょうゆ 小さじ1','ごま油 小さじ2'], p: ['厚揚げは一口大、ピーマンは乱切りにする。','調味料を混ぜておく。','ごま油でひき肉を炒め、厚揚げとピーマンを加えて炒める。','合わせた調味料を加えて全体に絡める。'] },
+  '鮭の塩焼き': { s: ['生鮭 2切れ','塩 小さじ1/2','大根おろし（お好みで）'], p: ['鮭に塩をふって10分おき、出てきた水分をふく。','魚焼きグリル（またはクッキングシートを敷いたフライパン）に皮目を下にして並べる。','中火で片面5分ずつ、焼き色がつくまで焼く。'], tip: '甘塩鮭なら塩はふらなくていいよ。' },
+  '鮭のホイル焼き': { s: ['生鮭 2切れ','玉ねぎ 1/4個','きのこ 1/2パック','バター 20g','塩こしょう 少々','しょうゆ 少々'], p: ['鮭に塩こしょうをふる。玉ねぎは薄切りにする。','アルミホイルに玉ねぎ、鮭、きのこ、バターの順にのせて包む。','フライパンに並べて水50mlを入れ、ふたをして中火で12分蒸し焼きにする。','しょうゆをたらしていただく。'], tip: '洗い物が少なくてらくちんだよ。' },
+  'さばの味噌煮': { s: ['さば 2切れ','ねぎ 1本','しょうが 1かけ','水 150ml','酒 50ml','みそ 大さじ2','砂糖 大さじ1.5','みりん 大さじ1'], p: ['さばの皮に切れ目を入れ、熱湯を回しかけて臭みを取る。','鍋に水・酒・砂糖・みりん・薄切りしょうがを煮立て、さばを皮目を上にして入れる。','落としぶたをして8分煮る。','みそを煮汁で溶いて加え、4cmに切ったねぎを入れ、煮汁をかけながら7分煮る。'], tip: 'みそは後から入れると香りがいいよ。' },
+  'ポークカレー': { s: ['豚こま肉 200g','じゃがいも 2個','玉ねぎ 1個','にんじん 1/2本','水 400ml','カレールウ 3皿分','サラダ油 大さじ1'], p: ['野菜と肉を一口大に切る。','鍋に油を熱し、肉、玉ねぎ、にんじん、じゃがいもの順に炒める。','水を加え、アクを取りながら15分煮る。','火を止めてルウを溶かし、弱火で5分、とろみがつくまで煮る。'], tip: 'ルウは火を止めてから入れるとダマにならないよ。' },
+  'チキンソテー': { s: ['鶏もも肉 1枚','塩 小さじ1/3','こしょう 少々','にんにく 1かけ','オリーブ油 小さじ2','レモン（お好みで）'], p: ['鶏肉の筋を切り、塩こしょうをふる。','フライパンに油とつぶしたにんにくを入れ、鶏肉を皮目を下にして置いてから火をつける。','中火でへらで押さえながら、皮がカリッとするまで8分焼く。','返して4分焼き、レモンを添える。'], tip: '冷たいフライパンから焼くと皮がパリパリになるよ。' },
+  'オムライス': { s: ['鶏もも肉 100g','玉ねぎ 1/4個','ごはん 2杯分','卵 4個','牛乳 大さじ2','ケチャップ 大さじ5＋仕上げ用','バター 20g','塩こしょう 少々'], p: ['鶏肉は小さく切り、玉ねぎはみじん切りにする。','バター半量で鶏肉と玉ねぎを炒め、ごはんとケチャップを加えて炒め、塩こしょうで味をととのえる。','1人分ずつ、卵2個と牛乳大さじ1を溶いて残りのバターで半熟に焼く。','チキンライスをのせて包み、ケチャップをかける。'], tip: '包むのが難しかったら、ごはんにのせるだけでもおいしいよ。' },
+  'チキンのトマト煮': { s: ['鶏もも肉 1枚','玉ねぎ 1/2個','きのこ 1/2パック','トマト 2個（カットトマト缶1缶でも）','にんにく 1かけ','コンソメ 小さじ1','塩こしょう 少々','オリーブ油 大さじ1'], p: ['鶏肉を一口大に切って塩こしょうをふる。玉ねぎは薄切り、トマトはざく切りにする。','オリーブ油でにんにくを炒め、鶏肉を焼き色がつくまで焼く。','玉ねぎときのこを炒め、トマトとコンソメを加える。','ふたをして15分煮て、塩こしょうで味をととのえる。'] },
+  'ハンバーグ': { s: ['合いびき肉 250g','玉ねぎ 1/2個','卵 1個','パン粉 大さじ4','牛乳 大さじ3','塩 小さじ1/3','こしょう・ナツメグ 少々','ケチャップ 大さじ3','ソース 大さじ2','サラダ油 小さじ1'], p: ['玉ねぎをみじん切りにし、レンジで2分加熱して冷ます。','ひき肉と塩を粘りが出るまで練り、残りの材料（ケチャップ・ソース以外）を混ぜる。','2等分して空気を抜き、小判形にして中央をくぼませる。','中火で両面に焼き色をつけ、水大さじ3を入れてふたをし、弱火で8分焼く。','フライパンに残った肉汁にケチャップとソースを加えて煮立て、ソースにする。'], tip: '真ん中をくぼませると、ふっくら焼けるよ。' },
+  'ロールキャベツ': { s: ['キャベツの葉 6枚','合いびき肉 200g','玉ねぎ 1/4個','卵 1個','パン粉 大さじ3','塩こしょう 少々','水 400ml','コンソメ 小さじ2'], p: ['キャベツの葉をゆで、芯の厚い部分をそぐ。','ひき肉、みじん切りの玉ねぎ、卵、パン粉、塩こしょうを練り、6等分する。','キャベツで肉だねを包む。','巻き終わりを下にして鍋に並べ、水とコンソメを入れて落としぶたをし、30分煮る。'], tip: '鍋にすき間なく並べるとほどけにくいよ。' },
+  '鮭のムニエル': { s: ['生鮭 2切れ','塩こしょう 少々','小麦粉 大さじ1','バター 15g','レモン（お好みで）'], p: ['鮭に塩こしょうをふって5分おき、水気をふく。','小麦粉を薄くまぶす。','フライパンにバターを中火で溶かし、皮目から3分、返して3分焼く。','溶けたバターをかけながら仕上げ、レモンを添える。'] },
+  'えびとブロッコリーのガーリック炒め': { s: ['むきえび 150g','ブロッコリー 1/2株','にんにく 1かけ','オリーブ油 大さじ1','酒 大さじ1','片栗粉 小さじ1','塩 小さじ1/3','こしょう 少々'], p: ['えびに片栗粉をもみ込んでから水で洗い、水気をふく。','ブロッコリーは小房に分け、レンジで2分加熱する。','オリーブ油で薄切りにんにくを弱火で炒め、香りが出たらえびを炒める。','ブロッコリーと酒を加えて炒め、塩こしょうで味をととのえる。'], tip: 'えびを片栗粉でもむと臭みが取れるよ。' },
+  'ベーコンとほうれん草のオムレツ': { s: ['卵 4個','ベーコン 2枚','ほうれん草 1/2束','牛乳 大さじ2','塩こしょう 少々','バター 10g'], p: ['ほうれん草はざく切り、ベーコンは1cm幅に切る。','フライパンでベーコンとほうれん草を炒めて取り出す。','卵・牛乳・塩こしょうを溶き、炒めた具を混ぜる。','バターを熱して卵液を流し、大きく混ぜて半熟になったら半分に折る。'] },
+  'ツナとキャベツのペペロンチーノ': { s: ['スパゲッティ 200g','ツナ缶 1缶','キャベツ 3枚','にんにく 1かけ','赤唐辛子 1本','オリーブ油 大さじ2','しょうゆ 小さじ1','塩 適量'], p: ['湯2Lに塩大さじ1を入れ、パスタを表示時間どおりゆでる。ゆで上がる1分前にざく切りキャベツを加える。','フライパンにオリーブ油、薄切りにんにく、唐辛子を入れ、弱火で香りを出す。','ツナとゆで汁大さじ4を加える。','パスタとキャベツを加えて絡め、しょうゆと塩で味をととのえる。'], tip: 'ゆで汁を入れるとソースがなめらかになるよ。' },
+  'ツナとじゃがいものグラタン': { s: ['じゃがいも 2個','玉ねぎ 1/2個','ツナ缶 1缶','バター 20g','小麦粉 大さじ2','牛乳 300ml','塩こしょう 少々','ピザ用チーズ 40g'], p: ['じゃがいもは薄切りにし、レンジで4分加熱する。','バターで薄切りの玉ねぎを炒め、小麦粉をふり入れて炒める。','牛乳を少しずつ加えてとろみをつけ、ツナと塩こしょうを加える。','耐熱皿にじゃがいもとソースを入れ、チーズをのせてトースターで10分焼く。'], tip: '牛乳は少しずつ入れるとダマにならないよ。' },
+  '回鍋肉': { s: ['豚バラ薄切り 150g','キャベツ 1/4個','ピーマン 2個','にんにく 1かけ','みそ 大さじ1.5','砂糖・酒 各大さじ1','しょうゆ 小さじ1','豆板醤 小さじ1/2（お好みで）','ごま油 小さじ2'], p: ['キャベツはざく切り、ピーマンは乱切り、豚肉は4cm幅に切る。','調味料を混ぜておく。','ごま油でみじん切りのにんにくと豚肉を炒める。','野菜を加えて強火で炒め、合わせた調味料を絡める。'] },
+  '肉野菜炒め': { s: ['豚こま肉 150g','キャベツ 2枚','もやし 1/2袋','にんじん 1/4本','ピーマン 1個','鶏がらスープの素 小さじ1','しょうゆ 小さじ1','塩こしょう 少々','ごま油 大さじ1'], p: ['野菜を食べやすく切る。にんじんは細切りにする。','豚肉に塩こしょうをふり、ごま油で炒める。','にんじん、キャベツとピーマン、もやしの順に加えて強火で炒める。','スープの素としょうゆで味をつける。'], tip: '強火で手早く炒めると水っぽくならないよ。' },
+  '八宝菜': { s: ['豚こま肉 100g','むきえび 80g','白菜 3枚','にんじん 1/4本','きのこ 1/2パック','水 200ml','鶏がらスープの素 小さじ2','しょうゆ・オイスターソース 各小さじ2','片栗粉 大さじ1（水大さじ2で溶く）','ごま油 大さじ1'], p: ['白菜は軸と葉に分けてそぎ切り、にんじんは短冊切りにする。','ごま油で豚肉とえびを炒め、白菜の軸とにんじん、葉ときのこの順に加えて炒める。','水と調味料を加えて煮立てる。','水溶き片栗粉を回し入れてとろみをつける。'] },
+  '鶏むねとブロッコリーの塩炒め': { s: ['鶏むね肉 1枚','ブロッコリー 1/2株','酒 大さじ1','片栗粉 大さじ1','鶏がらスープの素 小さじ1','塩 少々','にんにく 1/2かけ','ごま油 大さじ1'], p: ['鶏肉をそぎ切りにし、酒・塩・片栗粉をもみ込む。','ブロッコリーは小房に分け、レンジで2分加熱する。','ごま油でにんにくを炒め、鶏肉を両面焼く。','ブロッコリー、スープの素、水大さじ2を加えて炒め合わせる。'], tip: '片栗粉をもみ込むと、むね肉がしっとりするよ。' },
+  '青椒肉絲': { s: ['牛こま肉 150g','ピーマン 4個','たけのこ水煮（あれば） 50g','オイスターソース 大さじ1','しょうゆ・酒 各小さじ2','砂糖 小さじ1','片栗粉 小さじ2','ごま油 大さじ1'], p: ['牛肉を細切りにし、酒少々と片栗粉をまぶす。','ピーマンとたけのこを細切りにする。','ごま油で牛肉を炒め、色が変わったらピーマンとたけのこを加える。','調味料を加えて全体に絡める。'] },
+  '麻婆豆腐': { s: ['絹豆腐 1丁','豚ひき肉 100g','ねぎ 1/2本','にんにく・しょうが（すりおろし） 各小さじ1','豆板醤 小さじ1','甜麺醤（みそでも） 大さじ1','水 150ml','鶏がらスープの素 小さじ1','しょうゆ 小さじ2','片栗粉 小さじ2（水大さじ1で溶く）','ごま油 大さじ1'], p: ['豆腐は2cm角に切り、ねぎはみじん切りにする。','ごま油でにんにく・しょうが・豆板醤を炒め、ひき肉を炒める。','甜麺醤、水、スープの素、しょうゆを加えて煮立て、豆腐を入れて3分煮る。','ねぎを加え、水溶き片栗粉でとろみをつける。'], tip: '子ども用なら豆板醤を抜いて、あとから大人の分だけ足してね。' },
+  '麻婆なす': { s: ['なす 3本','豚ひき肉 100g','ねぎ 1/2本','にんにく・しょうが（すりおろし） 各小さじ1','豆板醤 小さじ1/2','みそ 大さじ1','砂糖・しょうゆ 各小さじ2','水 100ml','片栗粉 小さじ2（水大さじ1で溶く）','ごま油 大さじ2'], p: ['なすは乱切り、ねぎはみじん切りにする。','ごま油大さじ1.5でなすを焼いて取り出す。','残りのごま油でにんにく・しょうが・豆板醤を炒め、ひき肉を炒める。','水と調味料を加え、なすを戻してねぎを入れ、水溶き片栗粉でとろみをつける。'] },
+  'えびチリ': { s: ['むきえび 200g','ねぎ 1/2本','卵 1個（お好みで）','にんにく・しょうが（すりおろし） 各小さじ1','豆板醤 小さじ1/2','ケチャップ 大さじ3','砂糖 小さじ1','鶏がらスープの素 小さじ1/2','水 100ml','片栗粉 大さじ1＋小さじ1','ごま油 大さじ1'], p: ['えびに片栗粉大さじ1をまぶし、ごま油で焼いて取り出す。卵を使うときは炒り卵にして取り出す。','にんにく・しょうが・豆板醤・みじん切りのねぎを炒める。','ケチャップ・砂糖・水・スープの素を加えて煮立てる。','えびを戻し、片栗粉小さじ1を水で溶いてとろみをつけ、卵を加える。'] },
+  '天津飯': { s: ['卵 3個','ねぎ 1/2本','かに風味かまぼこ（あれば） 4本','ごはん 2杯','塩こしょう 少々','ごま油 大さじ1','あん：水 150ml','あん：鶏がらスープの素 小さじ1','あん：しょうゆ・酢・砂糖 各小さじ2','あん：片栗粉 小さじ2'], p: ['卵を溶き、斜め切りのねぎ、ほぐしたかにかま、塩こしょうを混ぜる。','1人分ずつ、ごま油で半熟に焼いてごはんにのせる。','あんの材料を小鍋で混ぜてから火にかけ、混ぜながらとろみをつける。','卵の上からあんをかける。'], tip: 'あんは火にかける前に混ぜておくとダマにならないよ。' },
+
+  'ほうれん草のおひたし': { s: ['ほうれん草 1束','だし汁 大さじ3','しょうゆ 小さじ2','かつお節 少々'], p: ['塩少々を入れた湯に根元から入れ、1分ゆでる。','冷水にとって水気をしぼり、4cmに切る。','だし汁としょうゆであえ、かつお節をのせる。'] },
+  'にんじんしりしり': { s: ['にんじん 1本','ツナ缶 1/2缶','卵 1個','しょうゆ 小さじ2','砂糖 小さじ1','ごま油 小さじ2'], p: ['にんじんを細切りにする（スライサーが便利）。','ごま油でにんじんをしんなりするまで炒める。','ツナと調味料を加える。','溶き卵を回し入れて炒め合わせる。'], tip: 'にんじんが苦手な子もツナと卵で食べやすいよ。' },
+  'キャベツの塩昆布あえ': { s: ['キャベツ 3枚','塩昆布 大さじ2','ごま油 小さじ2','白ごま 少々'], p: ['キャベツをざく切りにする。','ポリ袋に入れ、塩昆布とごま油を加えてもみ、5分おく。','器に盛って白ごまをふる。'] },
+  '大根サラダ': { s: ['大根 5cm','乾燥わかめ 大さじ1','ポン酢 大さじ2','ごま油 小さじ1','かつお節 少々'], p: ['わかめを水で戻す。','大根を細切りにして水にさらし、水気を切る。','大根とわかめを合わせ、ポン酢とごま油をかけてかつお節をのせる。'] },
+  '大根と油揚げの煮物': { s: ['大根 1/4本','油揚げ 1枚','だし汁 300ml','しょうゆ・みりん 各大さじ1.5','砂糖 小さじ1'], p: ['大根はいちょう切り、油揚げは短冊切りにする。','鍋にだし汁と大根を入れ、やわらかくなるまで10分煮る。','油揚げと調味料を入れて8分煮る。'] },
+  'なすの揚げびたし': { s: ['なす 3本','めんつゆ（3倍濃縮） 大さじ3','水 大さじ6','しょうが（すりおろし） 少々','揚げ油 適量'], p: ['なすを縦半分に切り、皮に格子の切れ目を入れて食べやすく切る。','めんつゆと水を合わせておく。','170℃の油で2〜3分揚げる（多めの油で揚げ焼きでもOK）。','熱いうちにつゆにひたし、しょうがをのせる。'], tip: '冷やしてもおいしいよ。' },
+  'きゅうりの浅漬け': { s: ['きゅうり 2本','塩 小さじ1/2','昆布（2cm角） 1枚','赤唐辛子 少々'], p: ['きゅうりを乱切りにする。','ポリ袋に塩・昆布・唐辛子と一緒に入れてもむ。','冷蔵庫で15分以上おく。'], tip: '漬けておく時間は調理時間に入れていないよ。' },
+  'きゅうりとわかめの酢の物': { s: ['きゅうり 1本','乾燥わかめ 大さじ1','塩 少々','酢 大さじ2','砂糖 大さじ1','しょうゆ 少々'], p: ['きゅうりを薄切りにして塩もみし、5分おいて水気をしぼる。','わかめを水で戻す。','合わせ酢であえる。'] },
+  'かぼちゃの煮物': { s: ['かぼちゃ 1/4個','水 200ml','砂糖 大さじ1.5','しょうゆ・みりん 各大さじ1'], p: ['種とわたを取って一口大に切り、ところどころ皮をむく。','皮を下にして鍋に並べ、水と調味料を入れる。','落としぶたをして12分、汁が少なくなるまで煮る。'], tip: '皮を下にすると煮くずれしにくいよ。' },
+  'ブロッコリーのごまあえ': { s: ['ブロッコリー 1/2株','すりごま 大さじ2','しょうゆ・砂糖 各小さじ2'], p: ['小房に分けて塩ゆでを2分する。','水気をよく切る。','すりごま・しょうゆ・砂糖であえる。'] },
+  'きのこのバター醤油炒め': { s: ['きのこ 2パック（しめじ・エリンギなど）','バター 10g','しょうゆ 小さじ2','こしょう 少々'], p: ['石づきを取ってほぐす。','バターで炒める。','しんなりしたらしょうゆを回し入れ、こしょうをふる。'] },
+  '白菜の浅漬け': { s: ['白菜 1/8株','塩 小さじ1','昆布（2cm角） 1枚','ゆずの皮（あれば） 少々'], p: ['白菜をざく切りにする。','ポリ袋に塩・昆布と一緒に入れてもむ。','重しをして冷蔵庫で30分おき、水気をしぼる。'], tip: '漬けておく時間は調理時間に入れていないよ。' },
+  '冷ややっこ': { s: ['豆腐 1丁','ねぎ 少々','しょうが（すりおろし） 少々','かつお節 少々','しょうゆ 適量'], p: ['豆腐の水気を切って半分に切る。','ねぎを小口切りにする。','薬味をのせ、しょうゆをかける。'] },
+  'だし巻き卵': { s: ['卵 3個','だし汁 大さじ3','砂糖 小さじ1','しょうゆ・塩 少々','サラダ油 適量'], p: ['材料をすべて混ぜる。','卵焼き器に油をひき、1/3量を流して半熟のうちに奥から手前へ巻く。','巻いた卵を奥に移して油をひき、残りを流して巻くのを繰り返す。','熱いうちにペーパーや巻きすで形を整える。'] },
+  'ほうれん草とベーコンのソテー': { s: ['ほうれん草 1束','ベーコン 2枚','バター 10g','塩こしょう 少々'], p: ['ほうれん草は4cm、ベーコンは1cm幅に切る。','バターでベーコンを炒める。','ほうれん草の茎、葉の順に加えて炒め、塩こしょうで味をととのえる。'] },
+  'ポテトサラダ': { s: ['じゃがいも 2個','きゅうり 1/2本','にんじん 1/4本','卵 1個','マヨネーズ 大さじ3','酢 小さじ1','塩こしょう 少々'], p: ['じゃがいもとにんじんを一口大に切り、やわらかくゆでる（レンジで6分でもOK）。卵はゆで卵にする。','じゃがいもが熱いうちにつぶし、酢と塩こしょうを混ぜる。','きゅうりを薄切りにして塩もみし、水気をしぼる。','冷めたらゆで卵、きゅうり、マヨネーズであえる。'], tip: '熱いうちに酢を混ぜると味がぼやけないよ。' },
+  'ジャーマンポテト': { s: ['じゃがいも 2個','ベーコン 2枚','玉ねぎ 1/4個','オリーブ油 大さじ1','塩こしょう 少々','粒マスタード（お好みで）'], p: ['じゃがいもをくし形に切り、レンジで4分加熱する。','ベーコンは1cm幅、玉ねぎは薄切りにする。','オリーブ油でじゃがいもに焼き色をつけ、ベーコンと玉ねぎを加えて炒める。','塩こしょうで味をととのえる。'] },
+  'コールスロー': { s: ['キャベツ 3枚','にんじん 1/4本','塩 小さじ1/3','マヨネーズ 大さじ2','酢 小さじ2','砂糖 小さじ1'], p: ['キャベツとにんじんをせん切りにする。','塩をふってもみ、5分おいて水気をしぼる。','調味料であえる。'] },
+  'トマトと玉ねぎのサラダ': { s: ['トマト 2個','玉ねぎ 1/4個','オリーブ油 大さじ1','酢 小さじ2','塩・こしょう 少々'], p: ['玉ねぎを薄切りにして水にさらし、水気を切る。','トマトをくし形に切る。','器に盛り、調味料を混ぜたドレッシングをかける。'] },
+  'かぼちゃサラダ': { s: ['かぼちゃ 1/8個（200g）','玉ねぎ 1/8個','マヨネーズ 大さじ2','塩こしょう 少々'], p: ['かぼちゃを一口大に切り、レンジで4分加熱する。','フォークでつぶす。','玉ねぎを薄切りにして水にさらし、水気をしぼる。','すべてを合わせ、マヨネーズと塩こしょうであえる。'] },
+  'ブロッコリーのガーリックソテー': { s: ['ブロッコリー 1/2株','にんにく 1かけ','オリーブ油 大さじ1','塩 少々'], p: ['ブロッコリーを小房に分ける。','オリーブ油と薄切りにんにくを弱火にかける。','香りが出たらブロッコリーと水大さじ2を入れ、ふたをして2分蒸し焼きにする。','塩で味をととのえる。'] },
+  'きのこのマリネ': { s: ['きのこ 2パック','玉ねぎ 1/4個','オリーブ油 大さじ2','酢 大さじ2','砂糖 小さじ1','塩こしょう 少々'], p: ['玉ねぎを薄切りにし、オリーブ油大さじ1・酢・砂糖・塩こしょうと混ぜてマリネ液を作る。','きのこをほぐし、残りのオリーブ油で炒める。','熱いうちにマリネ液に漬け、10分以上おく。'], tip: '冷蔵庫で3日くらいもつから作りおきにもいいよ。' },
+  'トマトと卵の炒め物': { s: ['トマト 2個','卵 3個','鶏がらスープの素 小さじ1/2','砂糖 ひとつまみ','塩こしょう 少々','ごま油 大さじ1'], p: ['トマトをくし形に切る。','卵を溶き、半量のごま油で大きく炒めて取り出す。','残りのごま油でトマトを炒め、スープの素と砂糖を加える。','卵を戻してさっと混ぜ、塩こしょうで味をととのえる。'], tip: '卵は半熟で取り出すとふわふわだよ。' },
+  'もやしのナムル': { s: ['もやし 1袋','ごま油 大さじ1','鶏がらスープの素 小さじ1/2','にんにく（すりおろし） 少々','塩 少々','白ごま 少々'], p: ['もやしをレンジで2分加熱する（ゆでてもOK）。','水気をよく切る。','調味料であえる。'] },
+  'ピーマンとツナのうま塩炒め': { s: ['ピーマン 4個','ツナ缶 1缶','鶏がらスープの素 小さじ1/2','ごま油 小さじ1','こしょう 少々'], p: ['ピーマンを細切りにする。','ごま油でピーマンを炒める。','ツナとスープの素を加えて炒め合わせ、こしょうをふる。'], tip: 'ピーマンが苦手な子にもツナで食べやすいよ。' },
+  'きゅうりの中華あえ': { s: ['きゅうり 2本','しょうゆ・酢 各大さじ1','砂糖 小さじ1','ごま油 小さじ2','白ごま 少々','ラー油（お好みで）'], p: ['きゅうりをめん棒でたたいてひびを入れ、手で食べやすく割る。','調味料であえ、5分おく。'] },
+  'バンバンジー': { s: ['鶏むね肉 1/2枚（ささみ2本でも）','きゅうり 1本','酒 大さじ1','塩 少々','たれ：すりごま 大さじ2','たれ：しょうゆ・酢・砂糖 各小さじ2','たれ：ごま油 小さじ1'], p: ['鶏肉に酒と塩をふり、ふんわりラップをしてレンジで3分加熱し、そのまま冷ます。','鶏肉を手で裂く。','きゅうりを細切りにして器に敷き、鶏肉をのせる。','たれの材料を混ぜてかける。'] },
+  '春雨サラダ': { s: ['春雨 30g','きゅうり 1/2本','にんじん 1/4本','卵 1個','酢 大さじ2','しょうゆ 大さじ1','砂糖 小さじ2','ごま油 小さじ2'], p: ['春雨をゆでて水にとり、水気を切って食べやすく切る。','卵で薄焼き卵を作り、細切りにする。','きゅうりとにんじんを細切りにする（にんじんはさっとゆでる）。','すべてを調味料であえる。'] },
+
+  '豆腐とわかめの味噌汁': { s: ['豆腐 1/2丁','乾燥わかめ 小さじ2','ねぎ 少々','だし汁 400ml','みそ 大さじ2'], p: ['だし汁を温め、さいの目に切った豆腐とわかめを入れる。','煮立ったら火を弱め、みそを溶き入れる。','小口切りのねぎを入れ、沸騰する直前で火を止める。'], tip: 'みそを入れたら煮立てないと香りがいいよ。' },
+  '大根と油揚げの味噌汁': { s: ['大根 3cm','油揚げ 1/2枚','だし汁 400ml','みそ 大さじ2'], p: ['大根はせん切り、油揚げは細切りにする。','だし汁で大根を5分煮て、油揚げを加える。','火を弱めてみそを溶き入れる。'] },
+  '豚汁': { s: ['豚こま肉 100g','大根 3cm','にんじん 1/3本','ねぎ 1/3本','だし汁 500ml','みそ 大さじ2.5','ごま油 小さじ1'], p: ['大根とにんじんはいちょう切り、ねぎは小口切りにする。','ごま油で豚肉、大根、にんじんを炒める。','だし汁を加え、アクを取りながら15分煮る。','みそを溶き入れ、ねぎを加える。'], tip: '具だくさんだから、これだけでおかずになるよ。' },
+  'なすの味噌汁': { s: ['なす 1本','ねぎ 少々','だし汁 400ml','みそ 大さじ2'], p: ['なすを半月切りにする。','だし汁でなすを3分煮る。','みそを溶き入れ、小口切りのねぎを加える。'] },
+  'じゃがいもと玉ねぎの味噌汁': { s: ['じゃがいも 1個','玉ねぎ 1/4個','だし汁 400ml','みそ 大さじ2'], p: ['じゃがいもは1cm厚のいちょう切り、玉ねぎは薄切りにする。','だし汁でやわらかくなるまで8分煮る。','みそを溶き入れる。'], tip: '玉ねぎの甘みで子どもにも人気だよ。' },
+  'きのこと豆腐の味噌汁': { s: ['きのこ 1/2パック','豆腐 1/3丁','だし汁 400ml','みそ 大さじ2'], p: ['きのこをほぐし、豆腐をさいの目に切る。','だし汁できのこを3分煮て、豆腐を加える。','みそを溶き入れる。'] },
+  '白菜と油揚げの味噌汁': { s: ['白菜 1枚','油揚げ 1/2枚','だし汁 400ml','みそ 大さじ2'], p: ['白菜はざく切り、油揚げは細切りにする。','だし汁で白菜の軸を先に煮て、葉と油揚げを加えて3分煮る。','みそを溶き入れる。'] },
+  'ミネストローネ': { s: ['トマト 1個（カットトマト缶1/2缶でも）','玉ねぎ 1/4個','にんじん 1/4本','キャベツ 1枚','ベーコン 2枚','水 300ml','コンソメ 小さじ2','オリーブ油 小さじ2','塩こしょう 少々'], p: ['すべての材料を1cm角に切る。','オリーブ油でベーコン、玉ねぎ、にんじんを炒める。','キャベツ、トマト、水、コンソメを加えて15分煮る。','塩こしょうで味をととのえる。'], tip: '野菜が余ったら何でも入れてOKだよ。' },
+  'キャベツとベーコンのコンソメスープ': { s: ['キャベツ 2枚','ベーコン 2枚','玉ねぎ 1/4個','水 400ml','コンソメ 小さじ2','塩こしょう 少々'], p: ['キャベツはざく切り、ベーコンは1cm幅、玉ねぎは薄切りにする。','鍋に水とコンソメを入れ、具を加えて10分煮る。','塩こしょうで味をととのえる。'] },
+  'かぼちゃのポタージュ': { s: ['かぼちゃ 1/8個（200g）','玉ねぎ 1/4個','バター 10g','水 150ml','コンソメ 小さじ1','牛乳 200ml','塩 少々'], p: ['かぼちゃは皮をむいて薄切り、玉ねぎも薄切りにする。','バターで玉ねぎを炒め、かぼちゃ・水・コンソメを加えて10分煮る。','マッシャーやミキサーでなめらかにする。','牛乳でのばして温め、塩で味をととのえる。'] },
+  'オニオンスープ': { s: ['玉ねぎ 1個','バター 10g','水 400ml','コンソメ 小さじ2','塩こしょう 少々'], p: ['玉ねぎを薄切りにする。','バターで茶色くなるまで炒める。','水とコンソメを加えて5分煮る。','塩こしょうで味をととのえる。'], tip: '玉ねぎを先にレンジで5分温めると、早く色がつくよ。' },
+  '卵とトマトのコンソメスープ': { s: ['トマト 1個','卵 1個','水 400ml','コンソメ 小さじ2','塩こしょう 少々'], p: ['トマトをくし形に切る。','水とコンソメを煮立て、トマトを入れて2分煮る。','溶き卵を回し入れ、塩こしょうで味をととのえる。'] },
+  'かき玉スープ': { s: ['卵 1個','ねぎ 少々','水 400ml','鶏がらスープの素 小さじ2','しょうゆ 小さじ1','片栗粉 小さじ1（水小さじ2で溶く）','ごま油 少々'], p: ['水を煮立て、スープの素としょうゆを加える。','水溶き片栗粉でとろみをつける。','溶き卵を細く回し入れ、ねぎとごま油を加える。'], tip: 'とろみをつけてから卵を入れると、ふわふわになるよ。' },
+  'トマトと卵の中華スープ': { s: ['トマト 1個','卵 1個','水 400ml','鶏がらスープの素 小さじ2','塩こしょう 少々','ごま油 少々'], p: ['トマトをくし形に切る。','水とスープの素を煮立て、トマトを入れて2分煮る。','溶き卵を回し入れ、塩こしょうとごま油で仕上げる。'] },
+  'わかめスープ': { s: ['乾燥わかめ 大さじ1','ねぎ 少々','水 400ml','鶏がらスープの素 小さじ2','しょうゆ 小さじ1','ごま油・白ごま 少々'], p: ['水を煮立て、スープの素としょうゆを加える。','わかめと小口切りのねぎを入れて1分煮る。','ごま油と白ごまで仕上げる。'] },
+  'もやしの中華スープ': { s: ['もやし 1/2袋','ねぎ 少々','水 400ml','鶏がらスープの素 小さじ2','しょうゆ 小さじ1','塩こしょう 少々','ごま油 少々'], p: ['水を煮立て、スープの素としょうゆを加える。','もやしを入れて2分煮る。','ねぎを加え、塩こしょうとごま油で仕上げる。'] },
+};
+
+const SLOTS = [
+  { key: 'main', label: '主菜' },
+  { key: 'side', label: '副菜' },
+  { key: 'soup', label: '汁物' },
+];
+const STORE_KEY = 'kondate-checked';
+const TIME_KEY = 'kondate-time';
+const GENRE_KEY = 'kondate-genre';
+// 0 = こだわらない。各料理の目安時間がこの分数以内のものだけ選ぶ
+const TIME_LIMITS = [0, 30, 20, 15, 10];
+const GENRES = [
+  { key: 'any', label: 'こだわらない' },
+  { key: 'wa', label: '和食' },
+  { key: 'yo', label: '洋食' },
+  { key: 'ch', label: '中華' },
+];
+const GENRE_LABEL = { wa: '和食', yo: '洋食', ch: '中華' };
+const ALL_ITEMS = GROUPS.flatMap(g => g.items);
+
+const pantry = document.getElementById('pantry');
+const tray = document.getElementById('tray');
+const note = document.getElementById('note');
+const modeText = document.getElementById('modeText');
+let menu = {};
+
+function loadChecked() {
+  try { return new Set(JSON.parse(localStorage.getItem(STORE_KEY) || '[]')); } catch (e) { return new Set(); }
+}
+function saveChecked(set) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify([...set])); } catch (e) {}
+}
+function loadTime() {
+  try { const v = Number(localStorage.getItem(TIME_KEY)); return TIME_LIMITS.includes(v) ? v : 0; } catch (e) { return 0; }
+}
+function saveTime(v) {
+  try { localStorage.setItem(TIME_KEY, String(v)); } catch (e) {}
+}
+function checked() {
+  return new Set([...pantry.querySelectorAll('.chip input:checked')].map(el => el.value));
+}
+function loadGenre() {
+  try { const v = localStorage.getItem(GENRE_KEY); return GENRES.some(g => g.key === v) ? v : 'any'; } catch (e) { return 'any'; }
+}
+function saveGenre(v) {
+  try { localStorage.setItem(GENRE_KEY, v); } catch (e) {}
+}
+function timeLimit() {
+  const el = pantry.querySelector('input[name="time"]:checked');
+  return el ? Number(el.value) : 0;
+}
+function genre() {
+  const el = pantry.querySelector('input[name="genre"]:checked');
+  return el ? el.value : 'any';
+}
+// 時間とジャンルで絞り込む。該当がなければジャンルの条件をはずす
+function poolFor(slot) {
+  const limit = timeLimit();
+  const g = genre();
+  const inTime = DISHES.filter(d => d.t === slot && (!limit || d.m <= limit));
+  const inGenre = inTime.filter(d => g === 'any' || d.g === g);
+  return inGenre.length ? inGenre : inTime;
+}
+const rand = arr => arr[Math.floor(Math.random() * arr.length)];
+const countIn = (dish, set) => dish.i.filter(x => set.has(x)).length;
+
+function renderPantry() {
+  const saved = loadChecked();
+  const savedTime = loadTime();
+  const savedGenre = loadGenre();
+  pantry.innerHTML = `
+    <div class="group">
+      <h2>ジャンル</h2>
+      <div class="times" role="radiogroup" aria-label="ジャンル">
+        ${GENRES.map(g => `<span class="time"><input type="radio" name="genre" id="genre-${g.key}" value="${g.key}"${g.key === savedGenre ? ' checked' : ''}><label for="genre-${g.key}">${g.label}</label></span>`).join('')}
+      </div>
+    </div>
+    <div class="group">
+      <h2>調理時間（1品あたり）</h2>
+      <div class="times" role="radiogroup" aria-label="調理時間">
+        ${TIME_LIMITS.map(v => `<span class="time"><input type="radio" name="time" id="time-${v}" value="${v}"${v === savedTime ? ' checked' : ''}><label for="time-${v}">${v ? v + '分以内' : 'こだわらない'}</label></span>`).join('')}
+      </div>
+    </div>` + GROUPS.map(g => `
+    <div class="group">
+      <h2>${g.name}</h2>
+      <div class="chips">
+        ${g.items.map(item => {
+          const id = 'ing-' + ALL_ITEMS.indexOf(item);
+          return `<span class="chip"><input type="checkbox" id="${id}" value="${item}"${saved.has(item) ? ' checked' : ''}><label for="${id}">${item}</label></span>`;
+        }).join('')}
+      </div>
+    </div>`).join('') + `
+    <div class="pantry-foot"><span id="count"></span><button class="link" id="clear" type="button">チェックをすべてはずす</button></div>`;
+}
+
+// 選んだ食材のうち、まだ使っていないものを多く使う料理を優先する
+function score(dish, selected, remaining) {
+  return countIn(dish, remaining) * 10 + countIn(dish, selected);
+}
+
+function pickBest(slot, selected, remaining) {
+  const pool = poolFor(slot);
+  if (selected.size === 0) return rand(pool);
+  const scored = pool.map(d => ({ d, s: score(d, selected, remaining) }));
+  const best = Math.max(...scored.map(x => x.s));
+  if (best === 0) return rand(pool);
+  return rand(scored.filter(x => x.s === best).map(x => x.d));
+}
+
+function suggest() {
+  const selected = checked();
+  const remaining = new Set(selected);
+  menu = {};
+  for (const { key } of SLOTS) {
+    const dish = pickBest(key, selected, remaining);
+    menu[key] = dish;
+    dish.i.forEach(x => remaining.delete(x));
+  }
+  render(true);
+}
+
+// 入れ替え：チェックした食材を1つでも使う料理から選び直す（なければ全体から）
+function swap(slot) {
+  const selected = checked();
+  const others = new Set(SLOTS.filter(s => s.key !== slot).flatMap(s => menu[s.key].i));
+  const remaining = new Set([...selected].filter(x => !others.has(x)));
+  const pool = poolFor(slot).filter(d => d !== menu[slot]);
+  if (!pool.length) return;
+  let candidates = pool;
+  if (selected.size) {
+    const useRemaining = pool.filter(d => countIn(d, remaining) > 0);
+    const useAny = pool.filter(d => countIn(d, selected) > 0);
+    candidates = useRemaining.length ? useRemaining : useAny.length ? useAny : pool;
+  }
+  menu[slot] = rand(candidates);
+  render(false);
+}
+
+// 献立君のひとこと
+function kunSay(selected, leftover, limit, g) {
+  const main = menu.main.n;
+  if (selected.size && !leftover.length) {
+    return rand([`チェックした食材、ぜんぶ使えたよ！主菜は${main}だよ。`, `${main}で冷蔵庫すっきり！がんばって作ってね。`]);
+  }
+  if (selected.size) {
+    return `${leftover.join('、')}も使いたかったなあ…。入れ替えボタンで探してみてね。`;
+  }
+  if (limit && limit <= 15) return `${limit}分以内のさっと作れる献立にしたよ。今日は${main}でどう？`;
+  if (g !== 'any') return `${GENRE_LABEL[g]}の気分なんだね。${main}がおすすめだよ！`;
+  return rand([`今日は${main}なんてどう？`, `迷ったらぼくにおまかせ！${main}にしてみたよ。`, `冷蔵庫の食材を選んでくれたら、それで考えるよ。今日は${main}はどう？`]);
+}
+
+function render(animate) {
+  const selected = checked();
+  const used = new Set(SLOTS.flatMap(s => menu[s.key].i));
+  const leftover = [...selected].filter(x => !used.has(x));
+
+  document.getElementById('count').textContent = selected.size ? `${selected.size}品えらび中` : 'まだ何も選んでいません';
+  const limit = timeLimit();
+  const g = genre();
+  const conds = [g !== 'any' ? GENRE_LABEL[g] : '', limit ? `${limit}分以内` : ''].filter(Boolean);
+  const limitText = conds.length ? `${conds.join('・')}の条件で選んでいます。` : '';
+  modeText.innerHTML = selected.size
+    ? `えらんだ食材から提案<small>${limitText}チェックした食材をなるべく使う組み合わせです</small>`
+    : `おまかせで提案<small>${limitText}食材にチェックすると、それを使う献立に変わります</small>`;
+
+  tray.innerHTML = SLOTS.map(({ key, label }) => {
+    const d = menu[key];
+    return `
+      <article class="dish" data-recipe="${d.n}">
+        <div class="dish-head">
+          <span class="slot">${label}</span>
+          <button class="dish-link" type="button" data-recipe="${d.n}">${d.n}</button>
+          <span class="mins">${GENRE_LABEL[d.g]}・約${d.m}分</span>
+        </div>
+        <button class="swap" type="button" data-slot="${key}" aria-label="${label}を入れ替える"${poolFor(key).length > 1 ? '' : ' disabled title="この条件で作れる料理はこれだけです"'}>入れ替え</button>
+        <div class="ings">${d.i.map(x => `<span class="ing${selected.has(x) ? ' hit' : ''}">${x}</span>`).join('')}</div>
+      </article>`;
+  }).join('');
+
+  document.getElementById('kunText').textContent = kunSay(selected, leftover, limit, g);
+  if (animate) {
+    const kun = document.getElementById('kunSvg');
+    [tray, kun].forEach(el => el.classList.remove(el === tray ? 'pop' : 'hop'));
+    void tray.offsetWidth;
+    tray.classList.add('pop');
+    kun.classList.add('hop');
+  }
+
+  const total = Math.max(...SLOTS.map(s => menu[s.key].m));
+  const timeText = `いちばん時間がかかるのは約${total}分の料理です。`;
+  if (!selected.size) {
+    note.innerHTML = timeText;
+  } else if (leftover.length) {
+    note.innerHTML = `<b>${leftover.join('、')}</b> はこの献立では使っていません。入れ替えると使う料理が出てくることがあります。${conds.length ? 'ジャンルや調理時間を「こだわらない」にすると候補が増えます。' : ''}`;
+  } else {
+    note.innerHTML = `<b>チェックした食材をすべて使えます。</b>${timeText}`;
+  }
+}
+
+renderPantry();
+suggest();
+
+pantry.addEventListener('change', () => { saveChecked(checked()); saveTime(timeLimit()); saveGenre(genre()); suggest(); });
+pantry.addEventListener('click', e => {
+  if (e.target.id !== 'clear') return;
+  pantry.querySelectorAll('.chip input:checked').forEach(el => { el.checked = false; });
+  saveChecked(new Set());
+  suggest();
+});
+document.getElementById('again').addEventListener('click', suggest);
+tray.addEventListener('click', e => {
+  const btn = e.target.closest('.swap');
+  if (btn) { swap(btn.dataset.slot); return; }
+  // カードのどこを押しても作り方へ（入れ替えボタン以外）
+  const card = e.target.closest('.dish');
+  if (card) openRecipe(card.dataset.recipe);
+});
+
+// 作り方ページ
+const homeView = document.getElementById('homeView');
+const recipeView = document.getElementById('recipeView');
+let homeScroll = 0;
+
+// 材料の行が、チェックした食材を含むか（「豚肉」→「豚こま肉」など）
+function hasItem(line, item) {
+  if (item === 'ねぎ') return line.includes('ねぎ') && !line.includes('玉ねぎ');
+  if (['豚肉', '鶏肉', '牛肉'].includes(item)) return line.startsWith(item[0]) && line.includes('肉');
+  if (item === 'ツナ缶') return line.includes('ツナ');
+  if (item === 'きのこ') return line.includes('きのこ') || line.includes('しめじ');
+  return line.includes(item);
+}
+
+function openRecipe(name) {
+  const d = DISHES.find(x => x.n === name);
+  const r = RECIPES[name];
+  if (!d || !r) return;
+  const selected = checked();
+  const slot = SLOTS.find(s => s.key === d.t).label;
+  const q = encodeURIComponent(name);
+  const stuff = r.s.map(line => {
+    const at = line.lastIndexOf(' ');
+    const nm = at > 0 ? line.slice(0, at) : line;
+    const qty = at > 0 ? line.slice(at + 1) : '';
+    const have = [...selected].some(item => hasItem(nm, item));
+    return `<li${have ? ' class="have"' : ''}><span class="name">${nm}</span><span class="qty">${qty}</span></li>`;
+  }).join('');
+
+  recipeView.innerHTML = `
+    <div><button type="button" id="back">← 献立にもどる</button></div>
+    <div class="recipe-top">
+      <div class="recipe-meta"><span class="slot">${slot}</span><span>${GENRE_LABEL[d.g]}・約${d.m}分・2人分</span></div>
+      <h2>${name}</h2>
+    </div>
+    <div class="recipe-body">
+      <section class="stuff">
+        <h3>材料（2人分）</h3>
+        <ul>${stuff}</ul>
+      </section>
+      <section class="steps">
+        <h3>作り方</h3>
+        <ol>${r.p.map(step => `<li><p>${step}</p></li>`).join('')}</ol>
+      </section>
+    </div>
+    <div class="kun" id="recipeKun">
+      <div class="bubble">
+        <div class="bubble-name">献立君のひとこと</div>
+        <p class="bubble-text">${r.tip || 'おいしくできますように！できたら献立にもどって、ほかの料理も見てね。'}</p>
+      </div>
+    </div>
+    <div class="more">ほかの作り方も見てみる：
+      <a href="https://www.kurashiru.com/search?query=${q}" target="_blank" rel="noopener">クラシル</a>
+      <a href="https://cookpad.com/jp/search/${q}" target="_blank" rel="noopener">クックパッド</a>
+    </div>`;
+
+  const kun = document.getElementById('kunSvg').cloneNode(true);
+  kun.removeAttribute('id');
+  kun.classList.remove('hop');
+  document.getElementById('recipeKun').prepend(kun);
+
+  homeScroll = window.scrollY;
+  homeView.hidden = true;
+  recipeView.hidden = false;
+  window.scrollTo(0, 0);
+  document.getElementById('back').focus({ preventScroll: true });
+}
+
+function closeRecipe() {
+  recipeView.hidden = true;
+  homeView.hidden = false;
+  window.scrollTo(0, homeScroll);
+}
+
+recipeView.addEventListener('click', e => {
+  if (e.target.id === 'back') closeRecipe();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !recipeView.hidden) closeRecipe();
+});
+</script>
+</body>
+</html>
