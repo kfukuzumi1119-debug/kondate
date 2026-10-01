@@ -144,9 +144,16 @@ button.link:hover { color: var(--fg); }
   display: grid;
 }
 .dish {
-  display: grid; grid-template-columns: 1fr auto; gap: 4px 12px;
+  display: grid; grid-template-columns: 68px 1fr auto; gap: 4px 14px;
   padding: 16px 18px; border-top: 1.5px dashed var(--line);
 }
+.dish.empty { grid-template-columns: 1fr; }
+.thumb {
+  grid-row: 1 / span 2; width: 68px; height: 68px; border-radius: 12px;
+  object-fit: cover; background: var(--leaf-soft); display: block;
+}
+.thumb.none { display: grid; place-items: center; }
+.thumb.none svg { width: 48px; height: 48px; }
 .dish:first-child { border-top: none; }
 .dish { cursor: pointer; transition: background .15s; }
 .dish:first-child { border-radius: 14px 14px 0 0; }
@@ -164,7 +171,7 @@ button.link:hover { color: var(--fg); }
 .dish-name { font-family: var(--font-display); font-size: 1.45rem; line-height: 1.35; }
 .mins { color: var(--muted); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
 .dish .swap { align-self: start; font-size: 0.85rem; padding: 4px 10px; }
-.ings { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.85rem; }
+.ings { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.85rem; }
 .ing { padding: 0 8px; border-radius: 6px; border: 1px solid var(--line); color: var(--muted); }
 .ing.hit { background: var(--leaf-soft); border-color: var(--leaf); color: var(--fg); font-weight: 700; }
 .note {
@@ -189,6 +196,14 @@ button.link:hover { color: var(--fg); }
 /* 作り方ページ */
 .recipe { display: grid; gap: 20px; min-width: 0; }
 .recipe-top { display: grid; gap: 6px; }
+.recipe-head { display: flex; gap: 18px; align-items: flex-end; flex-wrap: wrap; }
+.recipe-photo { margin: 0; display: grid; gap: 4px; }
+.recipe-photo img { width: 180px; height: 180px; max-width: 100%; border-radius: 16px; object-fit: cover; display: block; background: var(--leaf-soft); }
+.recipe-photo figcaption { font-size: 0.72rem; color: var(--muted); max-width: 180px; overflow-wrap: anywhere; }
+.recipe-photo figcaption a { color: inherit; }
+.credits summary { cursor: pointer; color: var(--fg); font-weight: 700; }
+.credits ul { margin: 8px 0 0; padding-left: 1.2em; font-size: 0.8rem; display: grid; gap: 2px; }
+.credits a { color: inherit; overflow-wrap: anywhere; }
 .recipe-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; color: var(--muted); font-size: 0.9rem; }
 .recipe h2 {
   font-family: var(--font-display); font-weight: 400; font-size: 2rem; line-height: 1.3;
@@ -320,6 +335,11 @@ button.link:hover { color: var(--fg); }
     <h2>このアプリについて</h2>
     <p>「きょうの献立」は、冷蔵庫にある野菜や肉にチェックするだけで、主菜・副菜・汁物の組み合わせを提案する無料の献立アプリです。何もチェックしなければ、おまかせでランダムに決めます。</p>
     <p>和食・洋食・中華のジャンルと、10分〜30分の調理時間で絞り込めます。肉じゃが、麻婆豆腐、豚汁など家庭料理125品の作り方（材料2人分）つき。毎日の献立が決まらないときや、余った食材を使い切りたいときにどうぞ。</p>
+    <details class="credits">
+      <summary>料理写真のクレジット</summary>
+      <p>料理の写真はイメージです。Wikimedia Commons の写真を、正方形に切り抜いて縮小して使っています（それぞれ元のライセンスに従います）。</p>
+      <ul id="creditList"></ul>
+    </details>
   </footer>
 </div>
 
@@ -605,6 +625,113 @@ const RECIPES = {
   'ワンタンスープ': { s: ['豚ひき肉 80g','ワンタンの皮 12枚','ねぎ 1/4本','しょうゆ 小さじ1（肉だね用）','水 450ml','鶏がらスープの素 小さじ2','しょうゆ 小さじ1','塩こしょう 少々','ごま油 少々'], p: ['ひき肉・みじん切りのねぎ半量・しょうゆを混ぜ、ワンタンの皮で包む。','水とスープの素を煮立てる。','ワンタンを入れて3分煮る。','しょうゆと塩こしょうで味をととのえ、残りのねぎとごま油を加える。'], tip: '包むのが面倒なら、肉だんごにして入れてもいいよ。' },
 };
 
+
+// 料理写真（Wikimedia Commons。正方形に切り抜き・縮小）。[ファイル, 撮影者, ライセンス, 元ページ]
+const PHOTOS = {
+  "肉じゃが": ["p000.jpg", "Yumi Kimura from Yokohama, JAPAN", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Braised_pork_and_potatoes_(3089327692).jpg"],
+  "豚の生姜焼き": ["p001.jpg", "Ocdp", "CC0", "https://commons.wikimedia.org/wiki/File:Shogayaki_002.jpg"],
+  "豚こまともやしのポン酢炒め": ["p002.jpg", "yuiseki aoba from 東京都台東区花川戸, 日本", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Stir-fried_pork_%26_bean_sprouts_dinner_set_%3F,_Misoshiru-ya_AKIBA_ICHI_shop_(%E8%B1%9A%E3%82%82%E3%82%84%E3%81%97%E7%82%92%E3%82%81%E5%AE%9A%E9%A3%9F%3F_-_%E3%81%8A%E3%81%BB%E3%83%BC_-_%E5%91%B3%E5%99%8C%E6%B1%81%E5%B1%8B_AKIBA_ICHI%E5%BA%97)_(2011-06-15_21.32.49_by_yuiseki_aoba).jpg"],
+  "鶏の照り焼き": ["p005.jpg", "Daderot", "CC0", "https://commons.wikimedia.org/wiki/File:Chicken_teriyaki_bento_box_-_Massachusetts.jpg"],
+  "鶏の唐揚げ": ["p006.jpg", "Ocdp", "CC0", "https://commons.wikimedia.org/wiki/File:Chicken_karaage_006.jpg"],
+  "親子丼": ["p007.jpg", "Ocdp", "CC0", "https://commons.wikimedia.org/wiki/File:Oyakodon_003.jpg"],
+  "牛丼": ["p009.jpg", "Ocdp", "CC0", "https://commons.wikimedia.org/wiki/File:Gyuu-don_002.jpg"],
+  "鮭の塩焼き": ["p011.jpg", "jetalone", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Breakfast_of_grilled_salmon,_miso_soup_and_rice_by_jetalone.jpg"],
+  "鮭のホイル焼き": ["p012.jpg", "naotakem", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Salmon_and_vegetables_cooked_in_foil,_miso_soup_with_scallions,_and_brown_rice_%E3%82%B5%E3%83%BC%E3%83%A2%E3%83%B3%E3%81%A8%E9%87%8E%E8%8F%9C%E3%81%AE%E3%83%9B%E3%82%A4%E3%83%AB%E7%84%BC%E3%81%8D%E3%80%81%E3%83%8D%E3%82%AE%E3%81%A8%E9%BA%A9%E3%81%AE%E5%91%B3%E5%99%8C%E6%B1%81%E3%80%81%E7%8E%84%E7%B1%B3.jpg"],
+  "さばの味噌煮": ["p013.jpg", "yy from Tokyo, Japan", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:SABAMISO_(149751533).jpg"],
+  "ポークカレー": ["p014.jpg", "Ocdp", "CC0", "https://commons.wikimedia.org/wiki/File:Beef_curry_rice_003.jpg"],
+  "チキンソテー": ["p015.jpg", "naotakem", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Pan_fried_chicken_thighs,_quinoa_and_bean_risotto,_microgreens_salad_%E9%B3%A5%E3%82%82%E3%82%82%E8%82%89%E3%81%AE%E7%84%BC%E3%81%8D%E6%8F%9A%E3%81%92%E3%80%81%E3%82%AD%E3%83%8C%E3%82%A2%E3%81%A8%E8%B1%86%E3%81%AE%E3%83%AA%E3%82%BE%E3%83%83%E3%83%88%E3%82%82%E3%81%A9%E3%81%8D%E3%80%81%E3%83%9E%E3%82%A4%E3%82%AF%E3%83%AD%E3%82%B0%E3%83%AA%E3%83%BC%E3%83%B3%E3%81%AE%E3%82%B5%E3%83%A9%E3%83%80.jpg"],
+  "オムライス": ["p016.jpg", "Ow00wo", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:The_Omurice_at_Shiseido_Parlour_Ginza_Restaurant.jpg"],
+  "チキンのトマト煮": ["p017.jpg", "Evan Joshua Swigart (TheCulinaryGeek)", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Chicken_cacciatore_(cropped).jpg"],
+  "ハンバーグ": ["p018.jpg", "MaedaAkihiko", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Hamburg-Steak.jpg"],
+  "ロールキャベツ": ["p019.jpg", "a.fiedler", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Wirsingkohlrouladen-01.jpg"],
+  "鮭のムニエル": ["p020.jpg", "El Nuevo Doge", "CC0", "https://commons.wikimedia.org/wiki/File:Salm%C3%B3n_meuni%C3%A8re,_Mazatl%C3%A1n,_27_de_junio_de_2023.jpg"],
+  "えびとブロッコリーのガーリック炒め": ["p021.jpg", "Daderot", "CC0", "https://commons.wikimedia.org/wiki/File:Shrimp_and_mushrooms_in_Dijon_sauce,_with_broccoli_and_carrot_-_San_Francisco,_CA.jpg"],
+  "ベーコンとほうれん草のオムレツ": ["p022.jpg", "Kurt Kaiser", "CC0", "https://commons.wikimedia.org/wiki/File:Egg_and_spinach_breakfast_omelet_2.jpg"],
+  "ツナとキャベツのペペロンチーノ": ["p023.jpg", "Bairuilong", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Spaghetti_aglio_e_olio_KB.jpg"],
+  "ツナとじゃがいものグラタン": ["p024.jpg", "Dreamyshade", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Potato_gratin_on_stove.jpg"],
+  "回鍋肉": ["p025.jpg", "Guilhem Vellut from Paris, France", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Twice_cooked_pork,_Jia_Yan,_5_rue_Humblot,_Paris_002.jpg"],
+  "肉野菜炒め": ["p026.jpg", "Yelderberry (talk)", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Stir_fried_vegetables_2024-07-15_1.jpg"],
+  "八宝菜": ["p027.jpg", "Lombroso", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Happosai,_at_Gyoza-no-Ohsho_(2012.08.18).jpg"],
+  "鶏むねとブロッコリーの塩炒め": ["p028.jpg", "Ginny", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Ginger_chicken_(3168342551).jpg"],
+  "青椒肉絲": ["p029.jpg", "pelican from Tokyo, Japan", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Q%C4%ABngji%C4%81o_r%C3%B2us%C4%AB_(3518534294).jpg"],
+  "麻婆豆腐": ["p030.jpg", "Kos88", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Mapo_doufu_by_Chen_Mapo_Restaurant_in_Chengdu_Sichuan%EF%BC%88%E9%99%B3%E9%BA%BB%E5%A9%86%E8%B1%86%E8%85%90%E5%BA%97%E3%81%AE%E9%BA%BB%E5%A9%86%E8%B1%86%E8%85%90%EF%BC%89.JPG"],
+  "麻婆なす": ["p031.jpg", "pelican from Tokyo, Japan", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:MaPo_Egg_Plants_(%E9%BA%BB%E5%A9%86%E8%8C%84%E5%AD%90)_(6930148904).jpg"],
+  "えびチリ": ["p032.jpg", "Hykw-a4", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Ebichiri.jpg"],
+  "天津飯": ["p033.jpg", "jetalone from Ginza, Tokyo", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Tenshin_han_by_jetalone_in_Ginza,_Tokyo.jpg"],
+  "ほうれん草のおひたし": ["p034.jpg", "Lombroso", "CC0", "https://commons.wikimedia.org/wiki/File:Spinach_Ohitashi.jpg"],
+  "にんじんしりしり": ["p035.jpg", "Nissy-KITAQ", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Ninjin_Shirishiri.JPG"],
+  "キャベツの塩昆布あえ": ["p036.jpg", "Kgbo", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Tempura_whiting_fillets_with_sugarloaf_cabbage_salad_at_QAG_Cafe,_Brisbane.jpg"],
+  "大根サラダ": ["p037.jpg", "Lombroso", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Small_Salad,_at_Ikinari!_Steak_(2019-04-13).jpg"],
+  "大根と油揚げの煮物": ["p038.jpg", "Babi Hijau", "Public domain", "https://commons.wikimedia.org/wiki/File:Furofukidaikon001.jpg"],
+  "きゅうりの浅漬け": ["p040.jpg", "ayustety from Kayaba-cho, Tokyo", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Celery_asadzuke_by_ayustety_in_Tokyo.jpg"],
+  "かぼちゃの煮物": ["p042.jpg", "Kentin", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Nimono_of_japanese_pumpkin_2014.jpg"],
+  "ブロッコリーのごまあえ": ["p043.jpg", "Flickr user yoppy", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Tenderstem_broccoli_dressed_with_sesame_sauce_001.jpg"],
+  "きのこのバター醤油炒め": ["p044.jpg", "Cheryl from River City (Richmond), VA, USA", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Baby_bella_mushrooms_being_saut%C3%A9ed.jpg"],
+  "冷ややっこ": ["p046.jpg", "Ocdp", "CC0", "https://commons.wikimedia.org/wiki/File:Hiya-yakko_002.jpg"],
+  "だし巻き卵": ["p047.jpg", "yajico from Japanese restaurant Kuon in Ebisu, Shibuya, Tokyo", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Dashimaki_tamago_and_teapot_by_yajico_in_Ebisu,_Tokyo.jpg"],
+  "ポテトサラダ": ["p049.jpg", "不明", "CC BY 2.5", "https://commons.wikimedia.org/wiki/File:Potato_salad.jpg"],
+  "ジャーマンポテト": ["p050.jpg", "Flickr user june29(Jun OHWADA)", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:German_Potato_001.jpg"],
+  "コールスロー": ["p051.jpg", "不明", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Bowl%27o%27Coleslaw_modified.jpg"],
+  "トマトと玉ねぎのサラダ": ["p052.jpg", "Charles Haynes", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Kachumbari.jpg"],
+  "かぼちゃサラダ": ["p053.jpg", "방신애", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:Danhobak_salad_(kabocha_squash_salad).jpg"],
+  "ブロッコリーのガーリックソテー": ["p054.jpg", "HaJunkiyada", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Liat_Portal_for_Foodie_Disorder_-_Roasted_broccoli_cauliflower_and_onions.jpg"],
+  "トマトと卵の炒め物": ["p056.jpg", "Huangdan2060", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Hunan_cuisine,_stir-fried_tomato_with_eggs.jpg"],
+  "きゅうりの中華あえ": ["p059.jpg", "Benoît Prieur", "CC0", "https://commons.wikimedia.org/wiki/File:Pine_and_Crane_DTLA_-_smashed_cucumber_salad.jpg"],
+  "バンバンジー": ["p060.jpg", "rick", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Bon_bon_chicken_with_sauce.jpg"],
+  "春雨サラダ": ["p061.jpg", "PattayaPatrol", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:DFC_1491_Zesty_Thai_glass_noodle_salad_topped_with_plump_shrimp_fresh_tomatoes_cucumber_slices_and_cilantro.jpg"],
+  "豆腐とわかめの味噌汁": ["p062.jpg", "Ocdp", "CC0", "https://commons.wikimedia.org/wiki/File:Miso_Soup_001.jpg"],
+  "大根と油揚げの味噌汁": ["p063.jpg", "Kentin", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Miso_soup_of_daikon_2015.jpg"],
+  "豚汁": ["p064.jpg", "切干大根", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Jikasei_Tonjiru.jpg"],
+  "なすの味噌汁": ["p065.jpg", "securecat", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Eel_Chazuke_and_eggplants_miso_soup.jpg"],
+  "じゃがいもと玉ねぎの味噌汁": ["p066.jpg", "Ocdp", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Potato_and_seaweed_miso_soup.jpg"],
+  "きのこと豆腐の味噌汁": ["p067.jpg", "Andy / Andrew Fogg from near Cambridge, UK", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Miso_soup_(84779080).jpg"],
+  "ミネストローネ": ["p069.jpg", "Katrin Morenz from Aachen, Deutschland", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Minestrone_soup.jpg"],
+  "キャベツとベーコンのコンソメスープ": ["p070.jpg", "Auctor quaerendae", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:020260319_Golden_Collagen_Cabbage_Soup.jpg"],
+  "かぼちゃのポタージュ": ["p071.jpg", "Jim Lukach", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Roasted_kabocha_and_miso_soup_(45764069245).jpg"],
+  "オニオンスープ": ["p072.jpg", "No machine-readable author provided. Azh7 assumed (based on copyright claims).", "CC BY 2.5", "https://commons.wikimedia.org/wiki/File:Plate_french_onion_soup.jpg"],
+  "卵とトマトのコンソメスープ": ["p073.jpg", "NNU-10-HanRongrong", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Tomato_and_egg_soup.jpg"],
+  "かき玉スープ": ["p074.jpg", "Raimond Spekking", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Einlaufsuppe_im_Teller-0372.jpg"],
+  "トマトと卵の中華スープ": ["p075.jpg", "NNU-10-HanRongrong", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Tomato_and_egg_soup.jpg"],
+  "わかめスープ": ["p076.jpg", "User:Feth", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Korea.food-Miyeok.guk-01.jpg"],
+  "もやしの中華スープ": ["p077.jpg", "Korea Tourism Organization - DNA Studio", "KOGL Type 1", "https://commons.wikimedia.org/wiki/File:%EC%BD%A9%EB%82%98%EB%AC%BC%EA%B5%AD_-_Kongnamul_Guk_-_Bean_sprout_soup.jpg"],
+  "さばの塩焼き": ["p078.jpg", "毒島みるく", "CC0", "https://commons.wikimedia.org/wiki/File:Salty_grilled_mackerel_lunch_of_Yoshinoya.jpg"],
+  "さばの竜田揚げ": ["p079.jpg", "kazuh", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Tatsutaage.jpg"],
+  "鮭のちゃんちゃん焼き": ["p080.jpg", "サフィル", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Grilled_Fish_HokkeChanChanYaki.jpg"],
+  "鶏つくね": ["p081.jpg", "Syced", "CC0", "https://commons.wikimedia.org/wiki/File:%E3%81%A4%E3%81%8F%E3%81%AD%E3%80%81%E3%83%8D%E3%82%AE%E3%82%BD%E3%83%BC%E3%82%B9.jpg"],
+  "肉豆腐": ["p082.jpg", "nakashi from Chofu, Tokyo, JAPAN", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Niku_dofu_lunch_set_at_sinatra,_yaesu_(46378484934).jpg"],
+  "すき焼き風煮": ["p083.jpg", "ajari", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Sukiyaki_01.jpg"],
+  "豚肉の野菜巻き": ["p085.jpg", "RuinDig/Yuki Uchida", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:%E8%82%89%E5%B7%BB%E3%81%8D%E3%82%A2%E3%82%B9%E3%83%91%E3%83%A9%E3%82%AC%E3%82%B9---2024-06-21.jpg"],
+  "ビーフシチュー": ["p087.jpg", "3steph14", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Beef_stew_2.jpg"],
+  "クリームシチュー": ["p088.jpg", "Ocdp", "CC0", "https://commons.wikimedia.org/wiki/File:Cream_Stew_001.jpg"],
+  "ミートソーススパゲッティ": ["p089.jpg", "Andy Li", "CC0", "https://commons.wikimedia.org/wiki/File:Spaghetti_Bolognese_-_Figaros,_Brighton_2023-10-06.jpg"],
+  "カルボナーラ": ["p090.jpg", "Javier Somoza", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Espaguetis_carbonara.jpg"],
+  "ポトフ": ["p091.jpg", "Muesse", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Pot-au-feu_SAM_2723.JPG"],
+  "えびフライ": ["p092.jpg", "Ocdp", "CC0", "https://commons.wikimedia.org/wiki/File:Ebi_Fry_003.jpg"],
+  "酢豚": ["p093.jpg", "Misei sen", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:Subuta_20260411.jpg"],
+  "油淋鶏": ["p094.jpg", "毒島みるく", "CC0", "https://commons.wikimedia.org/wiki/File:Youlinji_with_leek_lunch_box_of_Origin_Bento.jpg"],
+  "焼き餃子": ["p095.jpg", "Arnold Gatilao from Oakland, CA, USA", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Yaki_Gyoza_(15957741427).jpg"],
+  "えびマヨ": ["p096.jpg", "masa from JAPAN", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:%E3%82%A8%E3%83%93%E3%83%9E%E3%83%A8.jpg"],
+  "牛肉とブロッコリーのオイスター炒め": ["p097.jpg", "jeffreyw", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Broccoli_beef_(5457397534).jpg"],
+  "ベーコンチャーハン": ["p098.jpg", "Ocdp", "CC0", "https://commons.wikimedia.org/wiki/File:Ramen_and_Chahan_002.jpg"],
+  "ほうれん草のごまあえ": ["p099.jpg", "Babi Hijau", "Public domain", "https://commons.wikimedia.org/wiki/File:Hourensougomaae001.jpg"],
+  "厚揚げのおろしポン酢": ["p102.jpg", "I (Potesara) took this photograph.", "CC BY-SA 2.5", "https://commons.wikimedia.org/wiki/File:Atsuage.jpg"],
+  "揚げだし豆腐": ["p103.jpg", "HungryHuy", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Agedashi_tofu,_fried_tofu_with_broth.jpg"],
+  "キャロットラペ": ["p107.jpg", "건복맘", "CC BY 2.0 kr", "https://commons.wikimedia.org/wiki/File:French_grated_carrot_salad_(cropped).jpg"],
+  "ポテトフライ": ["p108.jpg", "Horacio Cambeiro", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Homemade_French_Fries_in_Argentina.jpg"],
+  "マカロニサラダ": ["p109.jpg", "Bill McChesney from USA", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Macaroni_salad.jpg"],
+  "なすのトマトチーズ焼き": ["p110.jpg", "Flickr.com user \"Blue Lotus\"", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Melanzane_alla_Parmigiana.jpg"],
+  "中華風冷ややっこ": ["p111.jpg", "Dllu", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Hiyayakko_with_bonito_flakes_and_welsh_onion_2.jpg"],
+  "わかめときゅうりの中華サラダ": ["p113.jpg", "Alexis Doine", "CC0", "https://commons.wikimedia.org/wiki/File:Wakame_Salad,_Glendale_(California)_August_2024.JPG"],
+  "じゃがいもとピーマンの中華炒め": ["p114.jpg", "Ewan Munro from London, UK", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Taste_of_Beijing,_Soho,_London_(4363975792).jpg"],
+  "けんちん汁": ["p115.jpg", "User:Kentin", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Kenchinjiru_soy_sauce_flavor_2009.JPG"],
+  "鶏と大根のすまし汁": ["p118.jpg", "No machine-readable author provided. 小太刀~commonswiki assumed (based on copyright", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:CodazziKimosui1.jpg"],
+  "じゃがいものポタージュ": ["p119.jpg", "Андрей Романенко", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Vichyssoise_in_Can_Pere_Joan_restaurant.jpg"],
+  "ベーコンと野菜のミルクスープ": ["p120.jpg", "jeffreyw", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Parmesan_potato_soup_topped_with_bacon.jpg"],
+  "ブロッコリーのポタージュ": ["p121.jpg", "ParentingPatch", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Broccoli_Soup.JPG"],
+  "酸辣湯": ["p122.jpg", "BrokenSphere", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Ping_SJ_hot_%26_sour_soup.JPG"],
+  "鶏肉と白菜の中華スープ": ["p123.jpg", "Alpha", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Yunnan_ham_and_Chinese_Cabbage_Soup_-_Hongfa_Canting.jpg"],
+  "ワンタンスープ": ["p124.jpg", "Grueslayer", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:FOOD_Wonton_Soup.jpg"],
+};
 const SLOTS = [
   { key: 'main', label: '主菜' },
   { key: 'side', label: '副菜' },
@@ -740,6 +867,15 @@ function swap(slot) {
   render(false);
 }
 
+// 料理写真。写真がない料理は小さい献立君を出す
+const KUN_MINI = document.getElementById('kunSvg').outerHTML.replace(' id="kunSvg"', ' aria-hidden="true"');
+function thumbHtml(name) {
+  const p = PHOTOS[name];
+  return p
+    ? `<img class="thumb" src="images/${p[0]}" alt="${name}のイメージ写真" width="68" height="68" loading="lazy">`
+    : `<span class="thumb none">${KUN_MINI}</span>`;
+}
+
 // 献立君のひとこと
 function kunSay(selected, leftover, limit, g) {
   const dishes = pickedDishes();
@@ -785,6 +921,7 @@ function render(animate) {
       </article>`;
     return `
       <article class="dish" data-recipe="${d.n}">
+        ${thumbHtml(d.n)}
         <div class="dish-head">
           <span class="slot">${label}</span>
           <button class="dish-link" type="button" data-recipe="${d.n}">${d.n}</button>
@@ -818,6 +955,9 @@ function render(animate) {
     note.innerHTML = `<b>チェックした食材をすべて使えます。</b>${timeText}`;
   }
 }
+
+document.getElementById('creditList').innerHTML = Object.entries(PHOTOS)
+  .map(([name, p]) => `<li>${name}：<a href="${p[3]}" target="_blank" rel="noopener">${p[1]}</a>（${p[2]}）</li>`).join('');
 
 // タイトル横の献立君（同じ絵を小さく使う）
 const headKun = document.getElementById('kunSvg').cloneNode(true);
@@ -864,6 +1004,7 @@ function openRecipe(name) {
   if (!d || !r) return;
   const selected = checked();
   const slot = SLOTS.find(s => s.key === d.t).label;
+  const photo = PHOTOS[name];
   const q = encodeURIComponent(name);
   const stuff = r.s.map(line => {
     const at = line.lastIndexOf(' ');
@@ -875,9 +1016,15 @@ function openRecipe(name) {
 
   recipeView.innerHTML = `
     <div><button type="button" id="back">← 献立にもどる</button></div>
-    <div class="recipe-top">
-      <div class="recipe-meta"><span class="slot">${slot}</span><span>${GENRE_LABEL[d.g]}・約${d.m}分・2人分</span></div>
-      <h2>${name}</h2>
+    <div class="recipe-head">
+      ${photo ? `<figure class="recipe-photo">
+        <img src="images/${photo[0]}" alt="${name}のイメージ写真" width="180" height="180">
+        <figcaption>写真はイメージです。<a href="${photo[3]}" target="_blank" rel="noopener">${photo[1]}</a>（${photo[2]}）</figcaption>
+      </figure>` : ''}
+      <div class="recipe-top">
+        <div class="recipe-meta"><span class="slot">${slot}</span><span>${GENRE_LABEL[d.g]}・約${d.m}分・2人分</span></div>
+        <h2>${name}</h2>
+      </div>
     </div>
     <div class="recipe-body">
       <section class="stuff">
