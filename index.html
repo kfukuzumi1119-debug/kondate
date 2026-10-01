@@ -102,11 +102,11 @@ header p { margin: 4px 0 0; color: var(--muted); }
   background-size: 100%;
 }
 .chip input:focus-visible + label { outline: 2px solid var(--soy); outline-offset: 2px; }
-.times { display: flex; flex-wrap: wrap; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); padding: 3px; gap: 3px; }
-.time { flex: 1 1 auto; }
+.times { display: flex; flex-wrap: nowrap; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); padding: 3px; gap: 3px; }
+.time { flex: 1 1 auto; min-width: 0; }
 .time input { position: absolute; opacity: 0; pointer-events: none; }
 .time label {
-  display: block; text-align: center; padding: 5px 10px; border-radius: 9px;
+  display: block; text-align: center; padding: 5px 8px; border-radius: 9px;
   cursor: pointer; user-select: none; font-weight: 500; white-space: nowrap;
   font-variant-numeric: tabular-nums; color: var(--muted);
 }
@@ -684,9 +684,9 @@ function renderPantry() {
       </div>
     </div>
     <div class="group">
-      <h2>調理時間（1品あたり）</h2>
+      <h2>調理時間（1品あたりの上限）</h2>
       <div class="times" role="radiogroup" aria-label="調理時間">
-        ${TIME_LIMITS.map(v => `<span class="time"><input type="radio" name="time" id="time-${v}" value="${v}"${v === savedTime ? ' checked' : ''}><label for="time-${v}">${v ? v + '分以内' : 'こだわらない'}</label></span>`).join('')}
+        ${TIME_LIMITS.map(v => `<span class="time"><input type="radio" name="time" id="time-${v}" value="${v}"${v === savedTime ? ' checked' : ''}><label for="time-${v}">${v ? v + '分' : 'こだわらない'}</label></span>`).join('')}
       </div>
     </div>` + GROUPS.map(g => `
     <div class="group">
