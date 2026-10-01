@@ -152,6 +152,9 @@ button.link:hover { color: var(--fg); }
 .dish:first-child { border-radius: 14px 14px 0 0; }
 .dish:last-child { border-radius: 0 0 14px 14px; }
 .dish:hover { background: var(--leaf-soft); }
+.dish.empty { cursor: default; }
+.dish.empty:hover { background: none; }
+.empty-text { color: var(--muted); }
 .dish:hover .dish-link { color: var(--leaf); text-decoration-color: var(--leaf); }
 .dish-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; min-width: 0; }
 .slot {
@@ -556,16 +559,18 @@ function genre() {
   const el = pantry.querySelector('input[name="genre"]:checked');
   return el ? el.value : 'any';
 }
-// 時間とジャンルで絞り込む。該当がなければジャンルの条件をはずす
+const rand = arr => arr[Math.floor(Math.random() * arr.length)];
+const countIn = (dish, set) => dish.i.filter(x => set.has(x)).length;
+// 条件に合う料理だけ：時間・ジャンル、食材を選んでいればそのどれかを使うもの
 function poolFor(slot) {
   const limit = timeLimit();
   const g = genre();
-  const inTime = DISHES.filter(d => d.t === slot && (!limit || d.m <= limit));
-  const inGenre = inTime.filter(d => g === 'any' || d.g === g);
-  return inGenre.length ? inGenre : inTime;
+  const selected = checked();
+  return DISHES.filter(d => d.t === slot
+    && (!limit || d.m <= limit)
+    && (g === 'any' || d.g === g)
+    && (!selected.size || countIn(d, selected) > 0));
 }
-const rand = arr => arr[Math.floor(Math.random() * arr.length)];
-const countIn = (dish, set) => dish.i.filter(x => set.has(x)).length;
 
 function renderPantry() {
   const saved = loadChecked();
@@ -603,12 +608,13 @@ function score(dish, selected, remaining) {
 
 function pickBest(slot, selected, remaining) {
   const pool = poolFor(slot);
+  if (!pool.length) return null;
   if (selected.size === 0) return rand(pool);
   const scored = pool.map(d => ({ d, s: score(d, selected, remaining) }));
   const best = Math.max(...scored.map(x => x.s));
-  if (best === 0) return rand(pool);
   return rand(scored.filter(x => x.s === best).map(x => x.d));
 }
+const pickedDishes = () => SLOTS.map(s => menu[s.key]).filter(Boolean);
 
 function suggest() {
   const selected = checked();
@@ -617,31 +623,32 @@ function suggest() {
   for (const { key } of SLOTS) {
     const dish = pickBest(key, selected, remaining);
     menu[key] = dish;
-    dish.i.forEach(x => remaining.delete(x));
+    if (dish) dish.i.forEach(x => remaining.delete(x));
   }
   render(true);
 }
 
-// 入れ替え：チェックした食材を1つでも使う料理から選び直す（なければ全体から）
+// 入れ替え：条件に合う料理から選び直す。ほかの品で使っていない食材を使うものを優先
 function swap(slot) {
   const selected = checked();
-  const others = new Set(SLOTS.filter(s => s.key !== slot).flatMap(s => menu[s.key].i));
+  const others = new Set(SLOTS.filter(s => s.key !== slot && menu[s.key]).flatMap(s => menu[s.key].i));
   const remaining = new Set([...selected].filter(x => !others.has(x)));
   const pool = poolFor(slot).filter(d => d !== menu[slot]);
   if (!pool.length) return;
-  let candidates = pool;
-  if (selected.size) {
-    const useRemaining = pool.filter(d => countIn(d, remaining) > 0);
-    const useAny = pool.filter(d => countIn(d, selected) > 0);
-    candidates = useRemaining.length ? useRemaining : useAny.length ? useAny : pool;
-  }
-  menu[slot] = rand(candidates);
+  const useRemaining = pool.filter(d => countIn(d, remaining) > 0);
+  menu[slot] = rand(useRemaining.length ? useRemaining : pool);
   render(false);
 }
 
 // 献立君のひとこと
 function kunSay(selected, leftover, limit, g) {
-  const main = menu.main.n;
+  const dishes = pickedDishes();
+  if (!dishes.length) return '条件に合う料理が見つからなかったよ…。食材を増やすか、ジャンルや時間を「こだわらない」にしてみてね。';
+  const main = dishes[0].n;
+  if (dishes.length < SLOTS.length) {
+    const missing = SLOTS.filter(s => !menu[s.key]).map(s => s.label).join('と');
+    return `${missing}は条件に合うものがなかったよ。今日は${main}でどう？`;
+  }
   if (selected.size && !leftover.length) {
     return rand([`チェックした食材、ぜんぶ使えたよ！主菜は${main}だよ。`, `${main}で冷蔵庫すっきり！がんばって作ってね。`]);
   }
@@ -655,7 +662,7 @@ function kunSay(selected, leftover, limit, g) {
 
 function render(animate) {
   const selected = checked();
-  const used = new Set(SLOTS.flatMap(s => menu[s.key].i));
+  const used = new Set(pickedDishes().flatMap(d => d.i));
   const leftover = [...selected].filter(x => !used.has(x));
 
   document.getElementById('count').textContent = selected.size ? `${selected.size}品えらび中` : 'まだ何も選んでいません';
@@ -669,6 +676,13 @@ function render(animate) {
 
   tray.innerHTML = SLOTS.map(({ key, label }) => {
     const d = menu[key];
+    if (!d) return `
+      <article class="dish empty">
+        <div class="dish-head">
+          <span class="slot">${label}</span>
+          <span class="empty-text">条件に合う${label}がありません</span>
+        </div>
+      </article>`;
     return `
       <article class="dish" data-recipe="${d.n}">
         <div class="dish-head">
@@ -690,12 +704,16 @@ function render(animate) {
     kun.classList.add('hop');
   }
 
-  const total = Math.max(...SLOTS.map(s => menu[s.key].m));
+  const dishes = pickedDishes();
+  const total = dishes.length ? Math.max(...dishes.map(d => d.m)) : 0;
   const timeText = `いちばん時間がかかるのは約${total}分の料理です。`;
-  if (!selected.size) {
+  const loosen = [selected.size ? '食材を増やす' : '', conds.length ? 'ジャンルや調理時間を「こだわらない」にする' : ''].filter(Boolean).join('か、');
+  if (dishes.length < SLOTS.length) {
+    note.innerHTML = `条件に合う料理がない品は表示していません。${loosen ? loosen + 'と、候補が増えます。' : ''}`;
+  } else if (!selected.size) {
     note.innerHTML = timeText;
   } else if (leftover.length) {
-    note.innerHTML = `<b>${leftover.join('、')}</b> はこの献立では使っていません。入れ替えると使う料理が出てくることがあります。${conds.length ? 'ジャンルや調理時間を「こだわらない」にすると候補が増えます。' : ''}`;
+    note.innerHTML = `<b>${leftover.join('、')}</b> はこの献立では使っていません。入れ替えると使う料理が出てくることがあります。`;
   } else {
     note.innerHTML = `<b>チェックした食材をすべて使えます。</b>${timeText}`;
   }
