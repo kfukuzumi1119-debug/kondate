@@ -65,6 +65,9 @@ header h1 {
   margin: 0; line-height: 1.2; text-wrap: balance;
 }
 header p { margin: 4px 0 0; color: var(--muted); }
+.title-row { display: flex; align-items: center; gap: 10px; }
+.head-kun { display: inline-flex; }
+.head-kun .kun-svg { width: 54px; height: 54px; }
 .cols { display: grid; gap: 24px; grid-template-columns: 1fr; }
 @media (min-width: 860px) {
   .cols { grid-template-columns: 380px 1fr; align-items: start; }
@@ -249,7 +252,10 @@ button.link:hover { color: var(--fg); }
 <body>
 <div class="wrap">
   <header>
-    <h1>きょうの献立</h1>
+    <div class="title-row">
+      <h1>きょうの献立</h1>
+      <span class="head-kun" id="headKun"></span>
+    </div>
     <p>冷蔵庫にある食材にチェック。何も選ばなければおまかせで決めます。</p>
   </header>
 
@@ -694,6 +700,12 @@ function render(animate) {
     note.innerHTML = `<b>チェックした食材をすべて使えます。</b>${timeText}`;
   }
 }
+
+// タイトル横の献立君（同じ絵を小さく使う）
+const headKun = document.getElementById('kunSvg').cloneNode(true);
+headKun.removeAttribute('id');
+headKun.setAttribute('aria-hidden', 'true');
+document.getElementById('headKun').append(headKun);
 
 renderPantry();
 suggest();
