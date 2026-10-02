@@ -139,6 +139,24 @@ button.link:hover { color: var(--fg); }
 
 /* 献立 */
 .result { display: grid; gap: 14px; min-width: 0; }
+.feedback {
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: 16px;
+  padding: 18px 20px; display: grid; gap: 10px; max-width: 640px;
+}
+.feedback h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.4rem; margin: 0; }
+.fb-lead { margin: 0; color: var(--muted); font-size: 0.9rem; }
+#fbForm { display: grid; gap: 14px; }
+#fbForm fieldset { border: none; margin: 0; padding: 0; display: grid; gap: 6px; min-width: 0; }
+#fbForm legend, .fb-field { font-weight: 700; font-size: 0.9rem; padding: 0; }
+.fb-field { display: grid; gap: 6px; }
+.fb-field textarea {
+  font: inherit; font-weight: 400; color: var(--fg); background: var(--bg);
+  border: 1.5px solid var(--line); border-radius: 10px; padding: 8px 10px; resize: vertical; width: 100%;
+}
+.fb-field textarea:focus-visible { outline: 2px solid var(--soy); outline-offset: 1px; }
+.fb-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.fb-msg { font-size: 0.9rem; color: var(--muted); }
+.fb-msg.ok { color: var(--leaf); font-weight: 700; }
 .about { border-top: 1.5px dashed var(--line); padding-top: 18px; color: var(--muted); font-size: 0.88rem; max-width: 65ch; }
 .about h2 { font-size: 0.95rem; color: var(--fg); margin: 0 0 6px; }
 .about p { margin: 0 0 6px; }
@@ -338,6 +356,40 @@ button.link:hover { color: var(--fg); }
       </div>
     </section>
   </div>
+
+  <section class="feedback" aria-labelledby="fbTitle">
+    <h2 id="fbTitle">ご意見箱</h2>
+    <p class="fb-lead">使ってみた感想や「こんな料理・機能がほしい」を教えてください。送った内容は公開されません。お名前やメールアドレスなどは書かないでください。</p>
+    <form id="fbForm" novalidate>
+      <fieldset>
+        <legend>使ってみてどうでしたか？</legend>
+        <div class="times">
+          <span class="time"><input type="radio" name="rating" id="fb-r1" value="とても便利"><label for="fb-r1">とても便利</label></span>
+          <span class="time"><input type="radio" name="rating" id="fb-r2" value="便利"><label for="fb-r2">便利</label></span>
+          <span class="time"><input type="radio" name="rating" id="fb-r3" value="普通"><label for="fb-r3">ふつう</label></span>
+          <span class="time"><input type="radio" name="rating" id="fb-r4" value="使いにくい"><label for="fb-r4">使いにくい</label></span>
+        </div>
+      </fieldset>
+      <label class="fb-field" for="fb-wish">追加してほしい料理・食材・機能
+        <textarea id="fb-wish" rows="3" maxlength="1000" placeholder="例：ぶりの照り焼きを入れてほしい"></textarea>
+      </label>
+      <label class="fb-field" for="fb-issue">気になったところ・不具合
+        <textarea id="fb-issue" rows="3" maxlength="1000" placeholder="例：スマホで写真が小さくて見づらい"></textarea>
+      </label>
+      <fieldset>
+        <legend>どの端末で見ましたか？</legend>
+        <div class="times">
+          <span class="time"><input type="radio" name="device" id="fb-d1" value="スマホ"><label for="fb-d1">スマホ</label></span>
+          <span class="time"><input type="radio" name="device" id="fb-d2" value="パソコン"><label for="fb-d2">パソコン</label></span>
+          <span class="time"><input type="radio" name="device" id="fb-d3" value="タブレット"><label for="fb-d3">タブレット</label></span>
+        </div>
+      </fieldset>
+      <div class="fb-actions">
+        <button class="primary" type="submit" id="fbSend">送信する</button>
+        <span class="fb-msg" id="fbMsg" role="status"></span>
+      </div>
+    </form>
+  </section>
 
   <footer class="about">
     <h2>このアプリについて</h2>
@@ -1040,6 +1092,43 @@ function render(animate) {
     note.innerHTML = `<b>チェックした食材をすべて使えます。</b>${timeText}`;
   }
 }
+
+// ご意見箱：Googleフォーム（きょうの献立 ご意見箱）に送る
+const FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfPtsaz3nelp8akGve2AqBgBgp9aaN86OP7eZ62_79fj9Ls9g/formResponse';
+const FORM_FIELDS = { rating: 'entry.1011302926', wish: 'entry.1431766438', issue: 'entry.2026105337', device: 'entry.1827014130' };
+const fbForm = document.getElementById('fbForm');
+const fbMsg = document.getElementById('fbMsg');
+fbForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  const val = sel => (fbForm.querySelector(sel) || {}).value || '';
+  const data = {
+    rating: val('input[name="rating"]:checked'),
+    wish: document.getElementById('fb-wish').value.trim(),
+    issue: document.getElementById('fb-issue').value.trim(),
+    device: val('input[name="device"]:checked'),
+  };
+  fbMsg.className = 'fb-msg';
+  if (!data.rating && !data.wish && !data.issue) {
+    fbMsg.textContent = '感想を選ぶか、ひとことだけでも書いてから送信してください。';
+    return;
+  }
+  const body = new URLSearchParams();
+  Object.entries(data).forEach(([k, v]) => { if (v) body.append(FORM_FIELDS[k], v); });
+  const btn = document.getElementById('fbSend');
+  btn.disabled = true;
+  fbMsg.textContent = '送信しています…';
+  try {
+    // Googleフォームは結果を返さないので、送れたかどうかは通信エラーかどうかで判断する
+    await fetch(FORM_URL, { method: 'POST', mode: 'no-cors', body });
+    fbForm.reset();
+    fbMsg.className = 'fb-msg ok';
+    fbMsg.textContent = '送信しました。ありがとうございます！献立君がしっかり読みます。';
+  } catch (err) {
+    fbMsg.textContent = '送信できませんでした。ネットにつながっているか確かめて、もう一度送ってください。';
+  } finally {
+    btn.disabled = false;
+  }
+});
 
 document.getElementById('creditList').innerHTML = Object.entries(PHOTOS)
   .map(([name, p]) => `<li>${name}：<a href="${p[3]}" target="_blank" rel="noopener">${p[1]}</a>（${p[2]}）</li>`).join('');
