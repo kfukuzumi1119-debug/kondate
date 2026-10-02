@@ -140,10 +140,11 @@ button.link:hover { color: var(--fg); }
 /* 献立 */
 .result { display: grid; gap: 14px; min-width: 0; }
 .feedback {
-  background: var(--surface); border: 1.5px solid var(--line); border-radius: 16px;
-  padding: 18px 20px; display: grid; gap: 10px; max-width: 640px;
+  border: 1.5px dashed var(--line); border-radius: 14px;
+  padding: 14px 16px; display: grid; gap: 8px; max-width: 640px;
 }
-.feedback h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.4rem; margin: 0; }
+.feedback h2 { font-size: 0.95rem; margin: 0; }
+#fbOpen { font-size: 0.88rem; padding: 4px 12px; }
 .fb-lead { margin: 0; color: var(--muted); font-size: 0.9rem; }
 #fbForm { display: grid; gap: 14px; }
 #fbForm fieldset { border: none; margin: 0; padding: 0; display: grid; gap: 6px; min-width: 0; }
@@ -360,7 +361,8 @@ button.link:hover { color: var(--fg); }
   <section class="feedback" aria-labelledby="fbTitle">
     <h2 id="fbTitle">ご意見箱</h2>
     <p class="fb-lead">使ってみた感想や「こんな料理・機能がほしい」を教えてください。送った内容は公開されません。お名前やメールアドレスなどは書かないでください。</p>
-    <form id="fbForm" novalidate>
+    <div><button type="button" id="fbOpen" aria-expanded="false" aria-controls="fbForm">意見を書く ›</button></div>
+    <form id="fbForm" novalidate hidden>
       <fieldset>
         <legend>使ってみてどうでしたか？</legend>
         <div class="times">
@@ -1098,6 +1100,14 @@ const FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfPtsaz3nelp8akGve2Aq
 const FORM_FIELDS = { rating: 'entry.1011302926', wish: 'entry.1431766438', issue: 'entry.2026105337', device: 'entry.1827014130' };
 const fbForm = document.getElementById('fbForm');
 const fbMsg = document.getElementById('fbMsg');
+const fbOpen = document.getElementById('fbOpen');
+fbOpen.addEventListener('click', () => {
+  const open = fbForm.hidden;
+  fbForm.hidden = !open;
+  fbOpen.setAttribute('aria-expanded', String(open));
+  fbOpen.textContent = open ? '閉じる' : '意見を書く ›';
+  if (open) fbForm.querySelector('input, textarea').focus();
+});
 fbForm.addEventListener('submit', async e => {
   e.preventDefault();
   const val = sel => (fbForm.querySelector(sel) || {}).value || '';
