@@ -145,6 +145,48 @@ button.link:hover { color: var(--fg); }
 
 /* 献立 */
 .result { display: grid; gap: 14px; min-width: 0; }
+/* 保存と1週間の献立 */
+.save-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.92rem; }
+.save-row select {
+  font: inherit; color: var(--fg); background: var(--surface);
+  border: 1.5px solid var(--line); border-radius: 10px; padding: 5px 8px;
+}
+.save-row select:focus-visible { outline: 2px solid var(--soy); outline-offset: 2px; }
+.save-msg { color: var(--leaf); font-weight: 700; font-size: 0.88rem; }
+.week { display: grid; gap: 12px; min-width: 0; }
+.week-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.week h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.5rem; margin: 0; }
+.week-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.week-actions button { font-size: 0.88rem; }
+.week-lead { margin: 0; color: var(--muted); font-size: 0.88rem; }
+.week-grid { display: grid; gap: 10px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .week-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .week-grid { grid-template-columns: repeat(7, 1fr); } }
+.day {
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: 14px;
+  padding: 10px 12px; display: grid; gap: 6px; align-content: start; min-width: 0;
+}
+.day.today { border-color: var(--leaf); }
+.day-head { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.day-name { font-weight: 700; }
+.day.today .day-name::after { content: "きょう"; margin-left: 6px; font-size: 0.7rem; color: var(--bg); background: var(--leaf); padding: 1px 6px; border-radius: 999px; vertical-align: 2px; }
+.day-del { font-size: 0.75rem; padding: 0; border: none; background: none; color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+.day-del:hover { color: var(--fg); }
+.day ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.day li { display: grid; grid-template-columns: auto 1fr; gap: 6px; align-items: baseline; font-size: 0.86rem; }
+.day li .slot { font-size: 0.66rem; padding: 0 5px; }
+.day-dish { border: none; background: none; padding: 0; text-align: left; font: inherit; color: var(--fg); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; overflow-wrap: anywhere; }
+.day-dish:hover { color: var(--leaf); }
+.day-none { color: var(--muted); }
+.day-empty { color: var(--muted); font-size: 0.84rem; margin: 0; }
+.shop { background: var(--surface); border: 1.5px solid var(--line); border-radius: 14px; padding: 14px 16px; display: grid; gap: 10px; max-width: 720px; }
+.shop h3 { margin: 0; font-size: 1rem; }
+.shop-group h4 { margin: 0 0 6px; font-size: 0.78rem; letter-spacing: 0.12em; color: var(--muted); }
+.shop-items { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.shop-items label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.shop-items input:checked + span { text-decoration: line-through; color: var(--muted); }
+.shop-items small { color: var(--muted); }
+.shop-note { margin: 0; font-size: 0.8rem; color: var(--muted); }
 .feedback {
   border: 1.5px dashed var(--line); border-radius: 14px;
   padding: 14px 16px; display: grid; gap: 8px; max-width: 640px;
@@ -361,8 +403,28 @@ button.link:hover { color: var(--fg); }
         <span><i class="hit"></i>チェックした食材</span>
         <span><i></i>ほかに使う食材</span>
       </div>
+      <div class="save-row">
+        <label for="saveDay">この献立を</label>
+        <select id="saveDay"></select>
+        <button type="button" id="saveBtn">に保存する</button>
+        <span class="save-msg" id="saveMsg" role="status"></span>
+      </div>
     </section>
   </div>
+
+  <section class="week" id="weekView" aria-labelledby="weekTitle">
+    <div class="week-head">
+      <h2 id="weekTitle">1週間の献立</h2>
+      <div class="week-actions">
+        <button type="button" id="weekFill">空いている日をおまかせで埋める</button>
+        <button type="button" id="weekShop" aria-expanded="false" aria-controls="shopList">買い物リスト</button>
+        <button type="button" class="link" id="weekClear">全部消す</button>
+      </div>
+    </div>
+    <p class="week-lead" id="weekLead"></p>
+    <div class="week-grid" id="weekGrid"></div>
+    <div class="shop" id="shopList" hidden></div>
+  </section>
 
   <section class="feedback" aria-labelledby="fbTitle">
     <h2 id="fbTitle">ご意見箱</h2>
@@ -1228,6 +1290,182 @@ function render(animate) {
   }
 }
 
+// 1週間の献立（見ている人のブラウザだけに保存）
+const WEEK_KEY = 'kondate-week';
+const SHOP_KEY = 'kondate-shop';
+const DAYS = [
+  { key: 'mon', label: '月曜' }, { key: 'tue', label: '火曜' }, { key: 'wed', label: '水曜' },
+  { key: 'thu', label: '木曜' }, { key: 'fri', label: '金曜' }, { key: 'sat', label: '土曜' }, { key: 'sun', label: '日曜' },
+];
+const todayKey = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][new Date().getDay()];
+const dayLabel = key => DAYS.find(d => d.key === key).label;
+const dishByName = name => DISHES.find(d => d.n === name);
+function loadWeek() {
+  try { const w = JSON.parse(localStorage.getItem(WEEK_KEY) || '{}'); return w && typeof w === 'object' ? w : {}; } catch (e) { return {}; }
+}
+function saveWeek() {
+  try { localStorage.setItem(WEEK_KEY, JSON.stringify(week)); return true; } catch (e) { return false; }
+}
+let week = loadWeek();
+const weekView = document.getElementById('weekView');
+const weekGrid = document.getElementById('weekGrid');
+const weekLead = document.getElementById('weekLead');
+const shopList = document.getElementById('shopList');
+const saveDay = document.getElementById('saveDay');
+const saveMsg = document.getElementById('saveMsg');
+
+// 保存先の曜日。きょうから順に見て、最初に空いている日を選んでおく
+function fillDaySelect() {
+  const start = DAYS.findIndex(d => d.key === todayKey);
+  let pick = todayKey;
+  for (let k = 0; k < 7; k++) {
+    const d = DAYS[(start + k) % 7];
+    if (!week[d.key]) { pick = d.key; break; }
+  }
+  saveDay.innerHTML = DAYS.map(d => `<option value="${d.key}"${d.key === pick ? ' selected' : ''}>${d.label}${week[d.key] ? '（保存済み）' : ''}</option>`).join('');
+}
+
+function renderWeek(extra) {
+  const saved = DAYS.filter(d => week[d.key]).length;
+  weekLead.textContent = (extra ? extra + ' ' : '') + (saved
+    ? `${saved}日分を保存しています。保存はこのブラウザだけに残ります。`
+    : 'まだ保存した献立はありません。上の「この献立を〇曜に保存する」か、「空いている日をおまかせで埋める」で作れます。');
+  weekGrid.innerHTML = DAYS.map(d => {
+    const p = week[d.key];
+    const body = p
+      ? `<ul>${SLOTS.map(({ key, label }) => {
+          const dish = p[key] && dishByName(p[key]);
+          return `<li><span class="slot">${label}</span>${dish
+            ? `<button type="button" class="day-dish" data-recipe="${dish.n}">${dish.n}</button>`
+            : '<span class="day-none">なし</span>'}</li>`;
+        }).join('')}</ul>`
+      : '<p class="day-empty">未定</p>';
+    return `<article class="day${d.key === todayKey ? ' today' : ''}">
+      <div class="day-head"><span class="day-name">${d.label}</span>${p ? `<button type="button" class="day-del" data-del="${d.key}" aria-label="${d.label}の献立を消す">消す</button>` : ''}</div>
+      ${body}
+    </article>`;
+  }).join('');
+  if (!shopList.hidden) renderShop();
+}
+
+document.getElementById('saveBtn').addEventListener('click', () => {
+  if (!pickedDishes().length) {
+    saveMsg.textContent = 'この献立には料理がないので保存できません。';
+    return;
+  }
+  const key = saveDay.value;
+  week[key] = Object.fromEntries(SLOTS.map(s => [s.key, menu[s.key] ? menu[s.key].n : null]));
+  saveMsg.textContent = saveWeek()
+    ? `${dayLabel(key)}に保存しました。`
+    : 'このブラウザでは保存できませんでした（プライベートモードなど）。';
+  renderWeek();
+  fillDaySelect();
+});
+
+// おまかせで埋めるとき：今の条件で、すでに使った料理はなるべく避ける
+function pickForWeek(slot, used, selected, remaining) {
+  let pool = poolFor(slot);
+  const fresh = pool.filter(d => !used.has(d.n));
+  if (fresh.length) pool = fresh;
+  if (!pool.length) return null;
+  if (!selected.size) return rand(pool);
+  const scored = pool.map(d => ({ d, s: score(d, selected, remaining) }));
+  const best = Math.max(...scored.map(x => x.s));
+  return rand(scored.filter(x => x.s === best).map(x => x.d));
+}
+document.getElementById('weekFill').addEventListener('click', () => {
+  const selected = checked();
+  const used = new Set(DAYS.flatMap(d => week[d.key] ? SLOTS.map(s => week[d.key][s.key]).filter(Boolean) : []));
+  let filled = 0;
+  for (const d of DAYS) {
+    if (week[d.key]) continue;
+    const remaining = new Set(selected);
+    const entry = {};
+    for (const { key } of SLOTS) {
+      const dish = pickForWeek(key, used, selected, remaining);
+      entry[key] = dish ? dish.n : null;
+      if (dish) { used.add(dish.n); dish.i.forEach(x => remaining.delete(x)); }
+    }
+    if (SLOTS.some(s => entry[s.key])) { week[d.key] = entry; filled++; }
+  }
+  saveWeek();
+  renderWeek(filled ? `${filled}日分をおまかせで埋めました（今の条件で選んでいます）。` : '空いている日がないか、条件に合う料理がありませんでした。');
+  fillDaySelect();
+});
+
+let clearArmed = null;
+const weekClear = document.getElementById('weekClear');
+weekClear.addEventListener('click', () => {
+  if (!clearArmed) {
+    weekClear.textContent = '本当に全部消す？（もう一度押す）';
+    clearArmed = setTimeout(() => { clearArmed = null; weekClear.textContent = '全部消す'; }, 4000);
+    return;
+  }
+  clearTimeout(clearArmed); clearArmed = null;
+  weekClear.textContent = '全部消す';
+  week = {};
+  saveWeek();
+  try { localStorage.removeItem(SHOP_KEY); } catch (e) {}
+  renderWeek('1週間の献立を全部消しました。');
+  fillDaySelect();
+});
+
+weekGrid.addEventListener('click', e => {
+  const dish = e.target.closest('.day-dish');
+  if (dish) { openRecipe(dish.dataset.recipe); return; }
+  const del = e.target.closest('.day-del');
+  if (del) {
+    delete week[del.dataset.del];
+    saveWeek();
+    renderWeek(`${dayLabel(del.dataset.del)}の献立を消しました。`);
+    fillDaySelect();
+  }
+});
+
+// 買い物リスト：保存した献立の食材をまとめる（調味料は入れない）
+function loadShop() {
+  try { return new Set(JSON.parse(localStorage.getItem(SHOP_KEY) || '[]')); } catch (e) { return new Set(); }
+}
+function renderShop() {
+  const count = {};
+  DAYS.forEach(d => {
+    const p = week[d.key];
+    if (!p) return;
+    SLOTS.forEach(s => {
+      const dish = p[s.key] && dishByName(p[s.key]);
+      if (dish) dish.i.forEach(x => { count[x] = (count[x] || 0) + 1; });
+    });
+  });
+  const items = Object.keys(count);
+  if (!items.length) {
+    shopList.innerHTML = '<h3>買い物リスト</h3><p class="shop-note">保存した献立がまだありません。</p>';
+    return;
+  }
+  const bought = loadShop();
+  const have = checked();
+  shopList.innerHTML = `<h3>買い物リスト（${items.length}品）</h3>` + GROUPS.map(g => {
+    const list = g.items.filter(x => count[x]);
+    if (!list.length) return '';
+    return `<div class="shop-group"><h4>${g.name}</h4><div class="shop-items">${list.map(x =>
+      `<label><input type="checkbox" data-item="${x}"${bought.has(x) ? ' checked' : ''}><span>${x} <small>${count[x]}品で使う${have.has(x) ? '・家にある' : ''}</small></span></label>`
+    ).join('')}</div></div>`;
+  }).join('') + '<p class="shop-note">調味料と、ナンプラーやカレールウなどリストにない材料は入っていません。分量は作り方ページで確かめてください。チェックは「買った」のしるしです。</p>';
+}
+const weekShop = document.getElementById('weekShop');
+weekShop.addEventListener('click', () => {
+  shopList.hidden = !shopList.hidden;
+  weekShop.setAttribute('aria-expanded', String(!shopList.hidden));
+  weekShop.textContent = shopList.hidden ? '買い物リスト' : '買い物リストを閉じる';
+  if (!shopList.hidden) renderShop();
+});
+shopList.addEventListener('change', () => {
+  const list = [...shopList.querySelectorAll('input:checked')].map(el => el.dataset.item);
+  try { localStorage.setItem(SHOP_KEY, JSON.stringify(list)); } catch (e) {}
+});
+
+fillDaySelect();
+renderWeek();
+
 // ご意見箱：Googleフォーム（きょうの献立 ご意見箱）に送る
 const FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfPtsaz3nelp8akGve2AqBgBgp9aaN86OP7eZ62_79fj9Ls9g/formResponse';
 const FORM_FIELDS = { rating: 'entry.1011302926', wish: 'entry.1431766438', issue: 'entry.2026105337', device: 'entry.1827014130' };
@@ -1371,6 +1609,7 @@ function openRecipe(name) {
 
   homeScroll = window.scrollY;
   homeView.hidden = true;
+  weekView.hidden = true;
   recipeView.hidden = false;
   window.scrollTo(0, 0);
   document.getElementById('back').focus({ preventScroll: true });
@@ -1379,6 +1618,7 @@ function openRecipe(name) {
 function closeRecipe() {
   recipeView.hidden = true;
   homeView.hidden = false;
+  weekView.hidden = false;
   window.scrollTo(0, homeScroll);
 }
 
