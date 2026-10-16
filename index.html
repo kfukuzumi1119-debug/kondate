@@ -173,7 +173,15 @@ button.link:hover { color: var(--fg); }
 .day-del { font-size: 0.75rem; padding: 0; border: none; background: none; color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
 .day-del:hover { color: var(--fg); }
 .day ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-.day li { display: grid; grid-template-columns: auto 1fr; gap: 6px; align-items: baseline; font-size: 0.86rem; }
+.day li { display: grid; grid-template-columns: auto 1fr auto; gap: 6px; align-items: baseline; font-size: 0.86rem; }
+.day-edit, .day-cancel { font-size: 0.72rem; padding: 0 6px; border-radius: 6px; color: var(--muted); }
+.day li.editing { grid-template-columns: auto 1fr; align-items: center; }
+.day-pick {
+  grid-column: 1 / -1; width: 100%; min-width: 0; font: inherit; font-size: 0.85rem;
+  color: var(--fg); background: var(--bg); border: 1.5px solid var(--soy); border-radius: 8px; padding: 4px 6px;
+}
+.day-pick:focus-visible { outline: 2px solid var(--soy); outline-offset: 1px; }
+.day li.editing .day-cancel { justify-self: start; }
 .day li .slot { font-size: 0.66rem; padding: 0 5px; }
 .day-dish { border: none; background: none; padding: 0; text-align: left; font: inherit; color: var(--fg); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; overflow-wrap: anywhere; }
 .day-dish:hover { color: var(--leaf); }
@@ -1325,6 +1333,19 @@ function fillDaySelect() {
   saveDay.innerHTML = DAYS.map(d => `<option value="${d.key}"${d.key === pick ? ' selected' : ''}>${d.label}${week[d.key] ? '（保存済み）' : ''}</option>`).join('');
 }
 
+// 1品だけ変えるときの選択肢：おまかせ・なし・ジャンルごとの料理
+let editing = null;
+function pickOptions(slot, current) {
+  const groups = GENRES.filter(g => g.key !== 'any').map(g => {
+    const list = DISHES.filter(d => d.t === slot && d.g === g.key);
+    return list.length ? `<optgroup label="${g.label}">${list.map(d =>
+      `<option value="${d.n}"${current && current.n === d.n ? ' selected' : ''}>${d.n}</option>`).join('')}</optgroup>` : '';
+  }).join('');
+  return `<option value=""${current ? '' : ' selected'} disabled>料理を選ぶ</option>
+    <option value="__auto">おまかせ（今の条件で選び直す）</option>
+    <option value="__none">なしにする</option>${groups}`;
+}
+
 function renderWeek(extra) {
   const saved = DAYS.filter(d => week[d.key]).length;
   weekLead.textContent = (extra ? extra + ' ' : '') + (saved
@@ -1335,9 +1356,14 @@ function renderWeek(extra) {
     const body = p
       ? `<ul>${SLOTS.map(({ key, label }) => {
           const dish = p[key] && dishByName(p[key]);
+          if (editing && editing.day === d.key && editing.slot === key) return `<li class="editing">
+            <span class="slot">${label}</span>
+            <select class="day-pick" data-day="${d.key}" data-slot="${key}" aria-label="${d.label}の${label}を選ぶ">${pickOptions(key, dish)}</select>
+            <button type="button" class="day-cancel">やめる</button>
+          </li>`;
           return `<li><span class="slot">${label}</span>${dish
             ? `<button type="button" class="day-dish" data-recipe="${dish.n}">${dish.n}</button>`
-            : '<span class="day-none">なし</span>'}</li>`;
+            : '<span class="day-none">なし</span>'}<button type="button" class="day-edit" data-day="${d.key}" data-slot="${key}" aria-label="${d.label}の${label}を変える">変える</button></li>`;
         }).join('')}</ul>`
       : '<p class="day-empty">未定</p>';
     return `<article class="day${d.key === todayKey ? ' today' : ''}">
@@ -1413,13 +1439,47 @@ weekClear.addEventListener('click', () => {
 weekGrid.addEventListener('click', e => {
   const dish = e.target.closest('.day-dish');
   if (dish) { openRecipe(dish.dataset.recipe); return; }
+  const edit = e.target.closest('.day-edit');
+  if (edit) {
+    editing = { day: edit.dataset.day, slot: edit.dataset.slot };
+    renderWeek();
+    const sel = weekGrid.querySelector('.day-pick');
+    if (sel) sel.focus();
+    return;
+  }
+  if (e.target.closest('.day-cancel')) { editing = null; renderWeek(); return; }
   const del = e.target.closest('.day-del');
   if (del) {
+    editing = null;
     delete week[del.dataset.del];
     saveWeek();
     renderWeek(`${dayLabel(del.dataset.del)}の献立を消しました。`);
     fillDaySelect();
   }
+});
+
+// 選んだら、その日のその品だけを差し替える
+weekGrid.addEventListener('change', e => {
+  const sel = e.target.closest('.day-pick');
+  if (!sel || !sel.value) return;
+  const { day, slot } = sel.dataset;
+  const label = SLOTS.find(s => s.key === slot).label;
+  const entry = week[day] || {};
+  let name = sel.value;
+  if (name === '__none') name = null;
+  if (name === '__auto') {
+    const used = new Set(DAYS.flatMap(d => week[d.key] ? SLOTS.map(s => week[d.key][s.key]).filter(Boolean) : []));
+    const selected = checked();
+    const others = new Set(SLOTS.filter(s => s.key !== slot && entry[s.key]).flatMap(s => (dishByName(entry[s.key]) || { i: [] }).i));
+    const remaining = new Set([...selected].filter(x => !others.has(x)));
+    const dish = pickForWeek(slot, used, selected, remaining);
+    if (!dish) { editing = null; renderWeek(`今の条件に合う${label}が見つかりませんでした。`); return; }
+    name = dish.n;
+  }
+  week[day] = { ...entry, [slot]: name };
+  saveWeek();
+  editing = null;
+  renderWeek(name ? `${dayLabel(day)}の${label}を「${name}」に変えました。` : `${dayLabel(day)}の${label}をなしにしました。`);
 });
 
 // 買い物リスト：保存した献立の食材をまとめる（調味料は入れない）
