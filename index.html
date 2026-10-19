@@ -22,7 +22,7 @@
 <style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yusei+Magic&family=Zen+Maru+Gothic:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
 <style>
 /* Layout: 左に食材の買い物メモ風チェック、右に献立の三品カード。スマホでは縦積み */
 :root {
@@ -347,6 +347,115 @@ button.link:hover { color: var(--fg); }
   .tray.pop .dish:nth-child(3) { animation-delay: .1s; }
   @keyframes pop { from { transform: translateY(4px); opacity: .4; } to { transform: none; opacity: 1; } }
 }
+
+/* ===== 献立表スタイル =====
+   給食の献立表と方眼ノートがモチーフ。紺のインク・赤いハンコ・罫線で区切る。
+   これより上の見た目の指定を、ここでまとめて上書きする */
+:root {
+  --bg: #f6f6f2;
+  --surface: #ffffff;
+  --fg: #1c2836;
+  --muted: #5d6876;
+  --line: #c7cfd9;
+  --leaf: #1f4e8c;
+  --leaf-soft: #e4ecf7;
+  --soy: #c3372c;
+  --soy-soft: #fbe8e5;
+  --grid: rgba(31, 78, 140, 0.07);
+  --font-display: "Klee One", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121820; --surface: #1a222c; --fg: #e5eaf1; --muted: #98a4b2; --line: #2f3b4a;
+    --leaf: #8db3e8; --leaf-soft: #1e2b3c; --soy: #ff8b7c; --soy-soft: #3a2422; --grid: rgba(141, 179, 232, 0.06);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121820; --surface: #1a222c; --fg: #e5eaf1; --muted: #98a4b2; --line: #2f3b4a;
+  --leaf: #8db3e8; --leaf-soft: #1e2b3c; --soy: #ff8b7c; --soy-soft: #3a2422; --grid: rgba(141, 179, 232, 0.06);
+}
+body {
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 22px 22px;
+  line-height: 1.75;
+}
+
+/* 見出し：献立表の表題のように、下に二重線 */
+header { border-bottom: 3px double var(--fg); padding-bottom: 12px; }
+header h1 { font-family: var(--font-display); font-weight: 600; font-size: 2.3rem; letter-spacing: 0.06em; }
+.today-line { font-family: var(--font-display); color: var(--fg) !important; font-size: 1rem; margin: 2px 0 0 !important; letter-spacing: 0.04em; }
+
+/* 角は丸めすぎない */
+button { border-radius: 4px; }
+button.primary { border-radius: 4px; letter-spacing: 0.04em; }
+.chip label { border-radius: 4px; }
+.times, .time label { border-radius: 4px; }
+.group h2 { color: var(--fg); letter-spacing: 0.08em; border-left: 4px solid var(--leaf); padding-left: 8px; line-height: 1.3; }
+
+/* 献立の3品：罫線で区切った表 */
+.tray { border-radius: 2px; border: 1.5px solid var(--fg); box-shadow: 4px 4px 0 var(--leaf-soft); }
+.dish { border-top: 1px solid var(--line); }
+.dish:first-child, .dish:last-child { border-radius: 0; }
+.dish:hover { background: var(--leaf-soft); }
+.thumb { border-radius: 3px; }
+.slot {
+  background: transparent; color: var(--soy); border: 1.5px solid var(--soy);
+  border-radius: 3px; font-family: var(--font-display); font-weight: 600; letter-spacing: 0.1em;
+}
+.dish-link { font-family: var(--font-display); font-weight: 600; text-decoration-thickness: 1px; }
+.dish-link::after { content: ""; }
+.ing { border-radius: 2px; }
+.tag { border-radius: 2px; background: transparent; border: 1px solid var(--soy); }
+.note { border-radius: 2px; border-left: 4px solid var(--soy); }
+.mode-text { font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; }
+.mode-text small { font-family: var(--font-body); }
+
+/* 献立君のふきだしは、メモ用紙のように */
+.bubble { border-radius: 3px; border-color: var(--fg); }
+.bubble::before { border-color: var(--fg); }
+.bubble-name { color: var(--soy); font-family: var(--font-display); }
+
+/* 1週間の献立：曜日の帯がある献立表 */
+.week h2 { font-family: var(--font-display); font-weight: 600; letter-spacing: 0.06em; }
+.week-grid { gap: 0; border: 1.5px solid var(--fg); background: var(--surface); }
+.day { border: none; border-radius: 0; padding: 0 0 10px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: transparent; }
+.day-head { background: var(--fg); color: var(--bg); padding: 4px 10px; align-items: center; }
+.day.today { border-color: var(--line); }
+.day.today .day-head { background: var(--soy); }
+.day.today .day-name::after { background: var(--bg); color: var(--soy); }
+.day-name { font-family: var(--font-display); letter-spacing: 0.1em; }
+.day-del { color: inherit; opacity: 0.85; }
+.day ul, .day-empty { padding: 0 10px; }
+.day-pick { border-radius: 3px; }
+.shop { border-radius: 2px; border-color: var(--fg); }
+
+/* 作り方ページ */
+.recipe h2 { font-family: var(--font-display); font-weight: 600; }
+.recipe-photo img { border-radius: 3px; }
+.stuff { border-radius: 2px; border-color: var(--fg); }
+.stuff li { border-bottom-style: solid; }
+.steps li::before { border-radius: 2px; font-family: var(--font-display); }
+
+/* はみ出し防止：中身に押されて列が広がらないようにする */
+.cols { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 860px) { .cols { grid-template-columns: minmax(360px, 1fr) minmax(0, 1fr); } }
+.times { display: grid; grid-template-columns: 1.7fr repeat(4, minmax(0, 1fr)); }
+.times.genres { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.time label { padding: 5px 2px; font-size: 0.86rem; overflow: hidden; text-overflow: clip; }
+#fbForm .times { grid-template-columns: repeat(auto-fit, minmax(5.5em, 1fr)); }
+
+/* 週の表：「変える」は料理名の下に小さく置き、名前を細切れにしない */
+.day li { grid-template-columns: auto minmax(0, 1fr); row-gap: 0; }
+.day-edit { grid-column: 2; justify-self: start; border: none; background: none; padding: 0; text-decoration: underline; text-underline-offset: 2px; }
+.day-edit:hover { color: var(--leaf); }
+
+@media (max-width: 520px) { .dish-link { font-size: 1.2rem; letter-spacing: 0; } header h1 { font-size: 2rem; } }
+
+/* ご意見箱とページ下 */
+.feedback { border: 1px solid var(--line); border-radius: 2px; background: var(--surface); }
+.about { border-top: 3px double var(--line); }
 </style>
 
 </head>
@@ -357,6 +466,7 @@ button.link:hover { color: var(--fg); }
       <h1>きょうの献立</h1>
       <span class="head-kun" id="headKun"></span>
     </div>
+    <p class="today-line" id="todayLine"></p>
     <p>冷蔵庫にある食材にチェック。何も選ばなければおまかせで決めます。</p>
   </header>
 
@@ -1573,6 +1683,13 @@ fbForm.addEventListener('submit', async e => {
 
 document.getElementById('creditList').innerHTML = Object.entries(PHOTOS)
   .map(([name, p]) => `<li>${name}：<a href="${p[3]}" target="_blank" rel="noopener">${p[1]}</a>（${p[2]}）</li>`).join('');
+
+// 見出しの下のきょうの日付（献立表の日付欄のように）
+(() => {
+  const now = new Date();
+  const wd = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
+  document.getElementById('todayLine').textContent = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日（${wd}）`;
+})();
 
 // タイトル横の献立君（同じ絵を小さく使う）
 const headKun = document.getElementById('kunSvg').cloneNode(true);
