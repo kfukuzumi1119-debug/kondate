@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="google-adsense-account" content="ca-pub-3965836277553422">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3965836277553422" crossorigin="anonymous"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>今日の晩ごはん何にする？気温で決める献立ルーレット</title>
+<meta name="description" content="今日の気温に合わせて「鍋」「冷やし麺」「カレー」などのジャンルをルーレットで提案。寒い日は温まるもの、暑い日はさっぱりしたものが出やすくなります。冷蔵庫にある食材を選ぶと、それで作れる料理だけで回せます。">
+<meta property="og:title" content="今日の献立ルーレット｜気温で決める晩ごはん">
+<meta property="og:description" content="気温に合わせたジャンルをルーレットで。冷蔵庫の食材からも選べます。">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://kondate.hibitool.com/roulette/">
+<meta property="og:url" content="https://kondate.hibitool.com/roulette/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='34' r='27' fill='%23c8442c'/%3E%3Cpath d='M32 34L32 7A27 27 0 0 1 58 27z' fill='%23f2b33d'/%3E%3Cpath d='M32 34L5 40A27 27 0 0 1 14 14z' fill='%23fff3dc'/%3E%3Ccircle cx='32' cy='34' r='6' fill='%23fff'/%3E%3Cpath d='M26 2h12l-6 10z' fill='%23332'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"今日の献立ルーレット","applicationCategory":"LifestyleApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"},"description":"気温に合わせて晩ごはんのジャンルをルーレットで提案。冷蔵庫の食材からも選べる。"}
+</script>
+<style>
+:root{--bg:#f7f1e6;--paper:#fffaf1;--ink:#33261d;--sub:#7a6656;--line:#e3d5c0;--red:#c8442c;--gold:#e8a52f}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Zen Maru Gothic",system-ui,sans-serif;font-weight:500;line-height:1.6}
+.wrap{max-width:1000px;margin:0 auto;padding:0 16px}
+header.top{background:var(--red);color:#fff}
+header.top .wrap{display:flex;align-items:center;gap:10px;padding-top:12px;padding-bottom:12px;flex-wrap:wrap}
+header.top svg{width:38px;height:38px;flex:none}
+header.top h1{margin:0;font-size:21px;font-weight:900;letter-spacing:.04em}
+header.top small{display:block;font-size:12px;opacity:.85;font-weight:500}
+header.top .ttl{margin-right:auto}
+header.top select{font:inherit;font-size:16px;padding:5px 8px;border:0;border-radius:4px;color:var(--ink)}
+button{font:inherit;cursor:pointer}
+.wx{display:flex;gap:0;margin:16px 0 0;background:var(--paper);border:1px solid var(--line);border-radius:4px;flex-wrap:wrap}
+.wx > div{flex:1 1 25%;padding:8px 10px;text-align:center;font-size:12px;color:var(--sub);min-width:90px}
+.wx > div+div{border-left:1px solid var(--line)}
+.wx b{display:block;font-size:18px;color:var(--ink)}
+.wx .say{flex:1 1 100%;border-left:0!important;border-top:1px solid var(--line);font-size:14px;color:var(--ink);text-align:left;padding:8px 14px}
+.grid{display:grid;grid-template-columns:1fr;gap:18px;margin-top:18px}
+@media (min-width:860px){.grid{grid-template-columns:440px 1fr}}
+.wheelBox{background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:16px;text-align:center}
+.wheelWrap{position:relative;width:100%;max-width:400px;margin:0 auto;aspect-ratio:1}
+.wheelWrap svg.wheel{width:100%;height:100%;transition:transform 4s cubic-bezier(.12,.8,.18,1)}
+.pointer{position:absolute;left:50%;top:-6px;transform:translateX(-50%);width:34px;height:40px;z-index:2}
+.hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:84px;height:84px;border-radius:50%;background:#fff;border:4px solid var(--ink);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:var(--red);z-index:2;cursor:pointer;user-select:none}
+.hub:active{transform:translate(-50%,-50%) scale(.96)}
+.spin{margin-top:14px;background:var(--red);color:#fff;border:0;font-size:20px;font-weight:900;padding:12px 40px;border-radius:4px;letter-spacing:.1em;box-shadow:0 4px 0 #8f2c1a}
+.spin:active{transform:translateY(3px);box-shadow:0 1px 0 #8f2c1a}
+.spin:disabled{opacity:.6}
+.day{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-bottom:10px}
+.day button{border:0;background:#fff;padding:5px 14px;font-size:14px;color:var(--ink)}
+.day button+button{border-left:1px solid var(--line)}
+.day button.on{background:var(--ink);color:#fff;font-weight:700}
+.result{background:var(--paper);border:1px solid var(--line);border-top:8px solid var(--c,var(--gold));border-radius:4px;padding:16px 18px;min-height:200px}
+.result .gname{font-size:40px;font-weight:900;color:var(--c);line-height:1.2}
+.result .why{font-size:15px;margin:4px 0 12px}
+.result ol{margin:0;padding:0;list-style:none;counter-reset:n}
+.result li{padding:9px 0;border-top:1px solid var(--line);display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.result li::before{counter-increment:n;content:counter(n);font-weight:900;color:#fff;background:var(--c);width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;border-radius:2px;flex:none}
+.result li b{font-size:19px}
+.result li small{color:var(--sub);font-size:13px}
+.result li small em{font-style:normal;color:var(--red);font-weight:700}
+.result .more{margin-top:12px;font-size:14px}
+.result .more a{color:var(--red);font-weight:700}
+.result .ph{color:var(--sub);font-size:15px;padding-top:10px;text-align:center}
+.kun{display:flex;gap:10px;align-items:flex-end;margin-bottom:6px}
+.kun svg{width:64px;height:64px;flex:none}
+.kun .bub{position:relative;background:#fff;border:1.5px solid var(--ink);border-radius:6px;padding:6px 10px;font-size:14px;margin-bottom:14px}
+.kun .bub::before{content:"";position:absolute;left:-8px;bottom:8px;border:7px solid transparent;border-right-color:var(--ink);border-left:0}
+.kun .bub b{display:block;font-size:11px;color:var(--sub);font-weight:500}
+.fridge{background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:14px 16px;margin-top:18px}
+.fridge h2{margin:0;font-size:17px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.fridge h2 label{font-size:14px;font-weight:500;display:flex;align-items:center;gap:6px;margin-left:auto}
+.fridge h2 input{width:20px;height:20px}
+.ings{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:4px;margin-top:10px}
+.ings button{border:1px solid var(--line);background:#fff;padding:7px 4px;font-size:14px;color:var(--ink);border-radius:3px}
+.ings button.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
+.fridge .free{margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--sub)}
+.fridge .free input{font:inherit;font-size:16px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;flex:1;min-width:200px}
+.fridge .info{font-size:13px;color:var(--sub);margin-top:8px}
+.rank{background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:12px 16px;margin-top:18px}
+.rank h2{margin:0 0 6px;font-size:17px}
+.rank .r{display:grid;grid-template-columns:9em 1fr 3em;gap:8px;align-items:center;font-size:14px;padding:3px 0}
+.rank .r i{display:block;height:12px;background:var(--c)}
+.rank .r span:last-child{text-align:right;color:var(--sub);font-size:12px}
+section.read{background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:4px 18px 12px;margin:22px 0}
+section.read h2{font-size:17px}
+section.read table{border-collapse:collapse;width:100%;font-size:14px}
+section.read th,section.read td{border-bottom:1px solid var(--line);padding:6px;text-align:left}
+section.read dt{font-weight:700;margin-top:10px}
+section.read dd{margin:2px 0 0;color:var(--sub);font-size:14px}
+footer{padding:20px 0 40px;font-size:12px;color:var(--sub);text-align:center}
+footer a{color:var(--sub)}
+@media (max-width:480px){.result .gname{font-size:32px}.hub{width:70px;height:70px;font-size:16px}.rank .r{grid-template-columns:7.5em 1fr 2.6em}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="34" r="27" fill="#fff3dc"/><path d="M32 34L32 7A27 27 0 0 1 58 27z" fill="#f2b33d"/><path d="M32 34L5 40A27 27 0 0 1 14 14z" fill="#e8806a"/><circle cx="32" cy="34" r="6" fill="#fff" stroke="#33261d" stroke-width="2"/></svg>
+  <div class="ttl"><h1>今日の献立ルーレット</h1><small><a href="../" style="color:#fff">きょうの献立</a> のなかま　気温で晩ごはんのジャンルを決める</small></div>
+  <select id="city" aria-label="場所"></select>
+</div></header>
+
+<main class="wrap">
+  <div class="wx" id="wx"><div style="flex:1 1 100%">天気を読み込んでいます…</div></div>
+
+  <div class="grid">
+    <div class="wheelBox">
+      <div class="day" id="day"><button data-v="0" class="on">今日の夜</button><button data-v="1">明日の夜</button></div>
+      <div class="wheelWrap">
+        <svg class="pointer" viewBox="0 0 34 40"><path d="M2 2h30L17 38z" fill="#33261d" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg>
+        <svg class="wheel" id="wheel" viewBox="-200 -200 400 400"></svg>
+        <div class="hub" id="hub">回す</div>
+      </div>
+      <button class="spin" id="spin">ルーレットを回す</button>
+    </div>
+    <div>
+      <div class="result" id="result"><div class="ph" id="ph0"></div></div>
+      <div class="rank" id="rank"></div>
+    </div>
+  </div>
+
+  <div class="fridge">
+    <h2>冷蔵庫にあるもの<label><input type="checkbox" id="useFridge">この食材で作れるものだけ</label></h2>
+    <div class="ings" id="ings"></div>
+    <div class="free">ほかの食材：<input type="text" id="free" placeholder="例：厚揚げ、ベーコン（読点で区切る）"></div>
+    <div class="info" id="finfo">食材を押すとチェックがつきます。チェックをつけると自動で「作れるものだけ」になります。</div>
+  </div>
+
+  <section class="read">
+    <h2>気温とジャンルの目安</h2>
+    <table>
+      <tr><th>10℃未満</th><td>鍋・おでん・シチュー・グラタンなど、体が温まる煮込み</td></tr>
+      <tr><th>10〜20℃</th><td>温かい麺、炒め物、揚げ物、洋食、和定食など幅広く</td></tr>
+      <tr><th>20〜26℃</th><td>丼もの、パスタ、カレー、焼き魚など</td></tr>
+      <tr><th>27℃以上</th><td>冷やし麺、さっぱり冷菜、エスニック、スタミナ系</td></tr>
+    </table>
+    <p style="font-size:13px;color:var(--sub)">気温は「最高気温」と「夕方18時ごろの体感温度」の平均で見ています。雨の日は温かいもの、蒸し暑い日はスパイスやさっぱりしたものが少し出やすくなります。</p>
+    <h2>よくある質問</h2>
+    <dl>
+      <dt>同じジャンルばかり出ませんか？</dt>
+      <dd>気温に合うジャンルほど区切りが大きくなりますが、ほかのジャンルも小さく入っているので、ときどき意外なものも出ます。直前に出たジャンルは少し出にくくしています。</dd>
+      <dt>作り方は？</dt>
+      <dd>主菜・副菜・汁物の組み合わせと作り方は、姉妹サイトの「きょうの献立」で調べられます。</dd>
+      <dt>選んだ食材は保存されますか？</dt>
+      <dd>このブラウザの中だけに保存されます。どこにも送信しません。</dd>
+    </dl>
+  </section>
+</main>
+
+<footer>
+  天気データ：<a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>（CC BY 4.0）<br>
+  <a href="https://hibitool.com/">日々のツール（hibitool.com）</a> ・ <a href="https://hibitool.com/privacy.html">プライバシーポリシー</a> ・ <a href="https://kondate.hibitool.com/">きょうの献立</a>
+</footer>
+
+<script>
+const PRESETS = [
+  ["札幌",43.0618,141.3545],["仙台",38.2682,140.8694],["新潟",37.9161,139.0364],["東京",35.6895,139.6917],
+  ["横浜",35.4437,139.6380],["厚木",35.4433,139.3626],["名古屋",35.1815,136.9066],["金沢",36.5613,136.6562],["京都",35.0116,135.7681],
+  ["大阪",34.6937,135.5023],["神戸",34.6901,135.1955],["広島",34.3853,132.4553],["高松",34.3428,134.0466],
+  ["福岡",33.5904,130.4017],["鹿児島",31.5966,130.5571],["那覇",26.2124,127.6809]
+];
+const ING=["豚肉","鶏肉","牛肉","ひき肉","魚","えび・いか","ベーコン・ハム","豆腐","卵","キャベツ","白菜","大根","玉ねぎ","じゃがいも","にんじん","なす","トマト","きゅうり","ピーマン","もやし","きのこ","ねぎ","青菜","ニラ","麺","牛乳・チーズ"];
+/* ジャンル：名前, 色, 合う気温の中心, 幅, 温冷(h=温かい c=冷たい s=スパイス), ひとこと, 料理 */
+const G=[
+ ["鍋","#c8442c",5,7,"h","体の芯から温まる鍋",
+  "寄せ鍋:鶏肉,魚,白菜,ねぎ,豆腐,きのこ,にんじん|キムチ鍋:豚肉,白菜,ニラ,豆腐,もやし,ねぎ|豆乳鍋:鶏肉,白菜,きのこ,豆腐,青菜,牛乳・チーズ|豚しゃぶ鍋:豚肉,白菜,青菜,ねぎ,豆腐|みぞれ鍋:鶏肉,大根,白菜,きのこ,ねぎ|すき焼き:牛肉,ねぎ,豆腐,白菜,卵,きのこ"],
+ ["おでん・煮物","#a0522d",8,7,"h","ことこと煮込んで温まる",
+  "おでん:大根,卵,魚|豚の角煮:豚肉,卵,ねぎ|肉じゃが:牛肉,じゃがいも,玉ねぎ,にんじん|ぶり大根:魚,大根|筑前煮:鶏肉,にんじん,きのこ|ロールキャベツ:ひき肉,キャベツ,玉ねぎ,トマト"],
+ ["シチュー・グラタン","#d98b2b",7,7,"h","とろっと熱々の洋風煮込み",
+  "クリームシチュー:鶏肉,じゃがいも,にんじん,玉ねぎ,牛乳・チーズ|ビーフシチュー:牛肉,じゃがいも,にんじん,玉ねぎ|マカロニグラタン:鶏肉,玉ねぎ,牛乳・チーズ,きのこ|ポトフ:ベーコン・ハム,キャベツ,じゃがいも,にんじん,玉ねぎ|ドリア:ひき肉,玉ねぎ,牛乳・チーズ"],
+ ["温かい麺","#b8642e",11,8,"h","すすって温まる麺",
+  "味噌ラーメン:ひき肉,もやし,ねぎ,麺,キャベツ|鍋焼きうどん:鶏肉,卵,ねぎ,きのこ,えび・いか,麺|カレーうどん:豚肉,玉ねぎ,ねぎ,麺|ちゃんぽん:豚肉,えび・いか,キャベツ,もやし,にんじん,麺|にゅうめん:卵,ねぎ,きのこ,麺|肉うどん:牛肉,ねぎ,麺"],
+ ["揚げ物","#d4a017",15,10,"","サクッと揚げたてごちそう",
+  "鶏の唐揚げ:鶏肉,キャベツ|とんかつ:豚肉,キャベツ,卵|コロッケ:じゃがいも,ひき肉,玉ねぎ,キャベツ|天ぷら:えび・いか,なす,きのこ,卵|アジフライ:魚,卵,キャベツ|チキン南蛮:鶏肉,卵,玉ねぎ"],
+ ["炒め物・中華","#c0392b",17,10,"s","強火でさっと、ごはんが進む",
+  "回鍋肉:豚肉,キャベツ,ピーマン,ねぎ|麻婆豆腐:ひき肉,豆腐,ねぎ|青椒肉絲:牛肉,ピーマン|麻婆なす:ひき肉,なす,ねぎ|エビチリ:えび・いか,ねぎ,卵|八宝菜:豚肉,えび・いか,白菜,にんじん,きのこ|ニラ玉:卵,ニラ"],
+ ["洋食","#9c5b3c",15,11,"","みんな大好き定番の洋食",
+  "ハンバーグ:ひき肉,玉ねぎ,卵|オムライス:鶏肉,玉ねぎ,卵|ナポリタン:ベーコン・ハム,玉ねぎ,ピーマン,麺|ポークソテー:豚肉,玉ねぎ|ミートローフ:ひき肉,玉ねぎ,にんじん,卵|チキンのトマト煮:鶏肉,トマト,玉ねぎ,きのこ"],
+ ["焼き魚・和定食","#3f6e8c",18,10,"","ほっとする和の定食",
+  "鮭の塩焼き:魚,大根|さばの味噌煮:魚,ねぎ|ぶりの照り焼き:魚,ねぎ|鶏の照り焼き:鶏肉,キャベツ|豚の生姜焼き:豚肉,玉ねぎ,キャベツ|さんまの塩焼き:魚,大根"],
+ ["カレー","#b07a1a",20,15,"s","迷ったらこれ、いつでもカレー",
+  "ポークカレー:豚肉,じゃがいも,にんじん,玉ねぎ|チキンカレー:鶏肉,玉ねぎ,トマト|キーマカレー:ひき肉,玉ねぎ,にんじん,ピーマン|夏野菜カレー:豚肉,なす,トマト,ピーマン,玉ねぎ|シーフードカレー:えび・いか,玉ねぎ"],
+ ["丼もの","#8b5a2b",21,10,"","ひと皿でしっかり、洗い物も少なめ",
+  "親子丼:鶏肉,卵,玉ねぎ,ねぎ|牛丼:牛肉,玉ねぎ|豚丼:豚肉,玉ねぎ,ねぎ|天津飯:卵,えび・いか,ねぎ|中華丼:豚肉,白菜,にんじん,きのこ,えび・いか|麻婆丼:ひき肉,豆腐,ねぎ"],
+ ["パスタ","#c46a3a",20,11,"","手早くできるパスタの日",
+  "ミートソース:ひき肉,玉ねぎ,にんじん,トマト,麺|カルボナーラ:ベーコン・ハム,卵,牛乳・チーズ,麺|和風きのこパスタ:きのこ,ベーコン・ハム,麺|ペペロンチーノ:ベーコン・ハム,青菜,麺|なすとトマトのパスタ:なす,トマト,ひき肉,麺"],
+ ["スタミナ・焼肉","#a3361d",27,7,"s","暑さに負けないスタミナごはん",
+  "焼肉:牛肉,玉ねぎ,ピーマン,もやし|ゴーヤチャンプルー:豚肉,豆腐,卵|ニラレバ炒め:ニラ,もやし|豚キムチ:豚肉,ニラ,もやし|ビビンバ:ひき肉,もやし,青菜,にんじん,卵|鶏のガーリックソテー:鶏肉,きのこ"],
+ ["エスニック","#2f8f6b",28,8,"s","スパイスで食欲アップ",
+  "ガパオライス:鶏肉,ひき肉,ピーマン,玉ねぎ,卵|タコライス:ひき肉,トマト,キャベツ,牛乳・チーズ|グリーンカレー:鶏肉,なす,ピーマン|フォー:鶏肉,もやし,ねぎ,麺|生春巻き:えび・いか,きゅうり,にんじん"],
+ ["冷やし麺","#2e7bb5",30,6,"c","つるっと冷たい麺でさっぱり",
+  "そうめん:きゅうり,卵,ねぎ,麺|冷やし中華:ベーコン・ハム,きゅうり,卵,トマト,麺|ざるそば:ねぎ,麺|冷麺:牛肉,きゅうり,卵,麺|冷やしうどん:鶏肉,きゅうり,ねぎ,麺|冷製トマトパスタ:トマト,麺"],
+ ["さっぱり冷菜","#3a9aa0",29,6,"c","火を使う時間を短く、さっぱり",
+  "冷しゃぶ:豚肉,キャベツ,トマト,きゅうり|棒棒鶏:鶏肉,きゅうり,トマト|あじの南蛮漬け:魚,玉ねぎ,にんじん,ピーマン|なすの揚げびたし:なす,ねぎ|冷やし豆腐サラダ:豆腐,トマト,きゅうり|鶏ハムサラダ:鶏肉,トマト,きゅうり"]
+];
+const SHORT={"おでん・煮物":"煮物","シチュー・グラタン":"シチュー","炒め物・中華":"中華","焼き魚・和定食":"和定食","スタミナ・焼肉":"スタミナ","さっぱり冷菜":"冷菜"};
+const GEN=G.map(g=>({short:SHORT[g[0]]||g[0],name:g[0],color:g[1],t:g[2],w:g[3],kind:g[4],say:g[5],dishes:g[6].split("|").map(s=>{const[n,i]=s.split(":");return{name:n,ing:i.split(",")};})}));
+
+const $=id=>document.getElementById(id);
+/* 献立君（きょうの献立のマスコット） */
+const KUN='<svg viewBox="0 0 124 124" aria-hidden="true"><path d="M46 24c-5-5 5-8 0-15M60 20c-5-5 5-8 0-15M74 24c-5-5 5-8 0-15" fill="none" stroke="#c9b8a3" stroke-width="3" stroke-linecap="round"/><path d="M106 64 L119 30M110 67 L123 35" stroke="#b8741f" stroke-width="3.5" stroke-linecap="round"/><path d="M100 74 q10 0 11 -10M20 74 q-11 1 -12 12" fill="none" stroke="#2b2622" stroke-width="3.5" stroke-linecap="round"/><path d="M24 62 C22 46 36 36 46 40 C50 29 70 29 74 40 C84 36 98 46 96 62 Z" fill="#fffdf8" stroke="#2b2622" stroke-width="3" stroke-linejoin="round"/><circle cx="60" cy="42" r="6" fill="#d9443e" stroke="#2b2622" stroke-width="2.5"/><rect x="46" y="102" width="28" height="9" rx="3" fill="#e9eef3" stroke="#2b2622" stroke-width="3"/><path d="M18 60 H102 C102 88 84 106 60 106 C36 106 18 88 18 60 Z" fill="#e9eef3"/><path d="M20 69 H100" stroke="#3f6f9c" stroke-width="4" stroke-dasharray="1 7" stroke-linecap="round"/><path d="M18 60 H102 C102 88 84 106 60 106 C36 106 18 88 18 60 Z" fill="none" stroke="#2b2622" stroke-width="3" stroke-linejoin="round"/><ellipse cx="47" cy="82" rx="3.4" ry="4.2" fill="#2b2622"/><ellipse cx="73" cy="82" rx="3.4" ry="4.2" fill="#2b2622"/><ellipse cx="39" cy="91" rx="5" ry="3" fill="#f2a0a0"/><ellipse cx="81" cy="91" rx="5" ry="3" fill="#f2a0a0"/><path d="M54 88 Q60 95 66 88" fill="none" stroke="#2b2622" stroke-width="3" stroke-linecap="round"/></svg>';
+const kunSay=t=>'<div class="kun">'+KUN+'<div class="bub"><b>献立君</b>'+t+'</div></div>';
+document.getElementById("ph0").outerHTML=kunSay("ルーレットを回してね。今夜のジャンルと料理の例を出すよ！");
+const pad=n=>String(n).padStart(2,"0");
+const ymd=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+let ST={city:"東京",ing:[],free:"",use:false,last:null};
+try{Object.assign(ST,JSON.parse(localStorage.getItem("roulette-settings")||"{}"));}catch(e){}
+const save=()=>{try{localStorage.setItem("roulette-settings",JSON.stringify(ST));}catch(e){}};
+PRESETS.forEach(p=>{const o=document.createElement("option");o.value=p[0];o.textContent=p[0];$("city").appendChild(o);});
+if(!PRESETS.find(p=>p[0]===ST.city)) ST.city="東京";
+$("city").value=ST.city;
+$("city").onchange=()=>{ST.city=$("city").value;save();load();};
+let dayOff=0;
+$("day").onclick=e=>{const b=e.target.closest("button");if(!b)return;dayOff=+b.dataset.v;[...$("day").children].forEach(x=>x.classList.toggle("on",x===b));calc();};
+
+/* 食材 */
+$("ings").innerHTML=ING.map(n=>'<button data-n="'+n+'" class="'+(ST.ing.includes(n)?"on":"")+'">'+n+'</button>').join("");
+$("useFridge").checked=ST.use; $("free").value=ST.free;
+$("ings").onclick=e=>{const b=e.target.closest("button");if(!b)return;const n=b.dataset.n;const k=ST.ing.indexOf(n);if(k>=0)ST.ing.splice(k,1);else ST.ing.push(n);b.classList.toggle("on");ST.use=ST.ing.length>0||!!ST.free.trim();$("useFridge").checked=ST.use;save();calc();};
+$("useFridge").onchange=()=>{ST.use=$("useFridge").checked;save();calc();};
+$("free").oninput=()=>{ST.free=$("free").value;if(ST.free.trim())ST.use=true;$("useFridge").checked=ST.use;save();calc();};
+function freeWords(){return ST.free.split(/[、,，\s]+/).map(s=>s.trim()).filter(Boolean);}
+function dishMatch(d){ // 一致した食材
+  const m=d.ing.filter(i=>ST.ing.includes(i));
+  freeWords().forEach(w=>{ if(d.name.includes(w)||d.ing.some(i=>i.includes(w)||w.includes(i))) m.push(w); });
+  return [...new Set(m)];
+}
+
+/* 天気 */
+let W=null, T=null, cond=null;
+async function load(){
+  const p=PRESETS.find(x=>x[0]===ST.city);
+  $("wx").innerHTML='<div style="flex:1 1 100%">'+p[0]+'の天気を読み込んでいます…</div>';
+  const u="https://api.open-meteo.com/v1/forecast?latitude="+p[1]+"&longitude="+p[2]+"&hourly=apparent_temperature,relative_humidity_2m,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FTokyo&forecast_days=3";
+  try{ W=await fetch(u).then(r=>{if(!r.ok)throw 0;return r.json();}); }
+  catch(e){ W=null; }
+  calc();
+}
+const wxName=c=>c<=1?"晴れ":c<=3?"くもり":c===45||c===48?"霧":[71,73,75,77,85,86].includes(c)?"雪":c>=95?"雷雨":"雨";
+function calc(){
+  const d=new Date(); d.setDate(d.getDate()+dayOff); const ds=ymd(d);
+  if(W){
+    const di=W.daily.time.indexOf(ds);
+    const hi=W.hourly.time.indexOf(ds+"T18:00");
+    const tmax=W.daily.temperature_2m_max[di], tmin=W.daily.temperature_2m_min[di];
+    const app=W.hourly.apparent_temperature[hi], rh=W.hourly.relative_humidity_2m[hi];
+    const rain=(W.daily.precipitation_sum[di]||0)>=1;
+    T=(tmax+app)/2; cond={tmax,tmin,app,rh,rain,wc:W.daily.weather_code[di]};
+    let say;
+    if(T<8) say="冷え込む夜です。温かい鍋や煮込みが出やすくなっています。";
+    else if(T<15) say="肌寒い夜。温かい麺や煮物、揚げ物がおすすめ。";
+    else if(T<22) say="過ごしやすい気温。どのジャンルも出やすい日です。";
+    else if(T<27) say="少し暑い日。丼やカレー、さっぱり系が増えてきます。";
+    else say="暑い日です。冷やし麺やさっぱり冷菜、スパイスの効いたものが出やすくなっています。";
+    if(rain) say+=" 雨なので温かいものを少し多めに。";
+    $("wx").innerHTML='<div>'+(dayOff?"明日":"今日")+'の天気<b>'+wxName(cond.wc)+'</b></div><div>最高/最低<b>'+Math.round(tmax)+'/'+Math.round(tmin)+'℃</b></div><div>夕方の体感<b>'+Math.round(app)+'℃</b></div><div>湿度(夕方)<b>'+rh+'%</b></div><div class="say">'+say+'</div>';
+  }else{
+    const m=new Date().getMonth()+1;
+    T=[6,7,11,16,20,23,27,29,25,19,13,8][m-1]; cond={rain:false,rh:60};
+    $("wx").innerHTML='<div class="say">天気を読み込めなかったので、'+m+'月の平均的な気温（約'+T+'℃）で選んでいます。</div>';
+  }
+  buildWheel();
+}
+function weights(){
+  return GEN.map((g,i)=>{
+    let w=Math.exp(-Math.pow((T-g.t)/g.w,2))+0.06;
+    if(cond.rain&&g.kind==="h") w*=1.3;
+    if(cond.rain&&g.kind==="c") w*=0.7;
+    if(T>=24&&cond.rh>=75&&g.kind==="s") w*=1.3;
+    if(ST.last===g.name) w*=0.5;
+    let n=GEN[i].dishes.length;
+    if(ST.use){ n=g.dishes.filter(d=>dishMatch(d).length).length; if(!n) w=0; }
+    return {g,w,n};
+  });
+}
+
+/* ルーレット */
+let SL=[], rot=0, spinning=false;
+function buildWheel(){
+  const all=weights().filter(x=>x.w>0).sort((a,b)=>b.w-a.w);
+  SL=all.slice(0,8);
+  const ranks=all.slice(0,8);
+  const fi=$("finfo");
+  if(ST.use){
+    const names=[...ST.ing,...freeWords()];
+    fi.textContent = names.length ? "「"+names.join("・")+"」で作れる料理があるジャンル："+all.length+"種類" : "食材を選んでください。";
+  }else fi.textContent="食材を押すとチェックがつきます。チェックをつけると自動で「作れるものだけ」になります。";
+  const svg=$("wheel");
+  if(!SL.length){ svg.innerHTML='<circle r="190" fill="#eee"/><text y="-100" text-anchor="middle" font-size="16" fill="#7a6656">合う料理がありません</text>'; $("rank").innerHTML=""; return; }
+  const sum=SL.reduce((s,x)=>s+x.w,0);
+  const PAL=["#c8442c","#e39b26","#2e7bb5","#2f8f6b","#8a4fa3","#d46a3a","#3a5a8c","#9a9a1e"];
+  let a=0, h="";
+  SL.forEach((x,k)=>{
+    x.col=PAL[k%PAL.length];
+    const ang=x.w/sum*360; x.a0=a; x.a1=a+ang;
+    const p=(deg)=>{const r=(deg-90)*Math.PI/180;return [190*Math.cos(r),190*Math.sin(r)];};
+    const [x0,y0]=p(a),[x1,y1]=p(a+ang);
+    const path= SL.length===1 ? '<circle r="190" fill="'+x.col+'"/>' : '<path d="M0 0L'+x0.toFixed(1)+' '+y0.toFixed(1)+'A190 190 0 '+(ang>180?1:0)+' 1 '+x1.toFixed(1)+' '+y1.toFixed(1)+'Z" fill="'+x.col+'" stroke="#fffaf1" stroke-width="3"/>';
+    const mid=a+ang/2;
+    const fs = ang<22?12:ang<34?15:17;
+    const label = ang<14 ? "" : x.g.short;
+    h+=path+'<text transform="rotate('+(mid-90).toFixed(1)+') translate(118 0)'+(mid>180?' rotate(180)':'')+'" text-anchor="middle" dominant-baseline="middle" font-size="'+fs+'" font-weight="900" fill="#fff" font-family="Zen Maru Gothic, sans-serif">'+label+'</text>';
+    a+=ang;
+  });
+  h+='<circle r="192" fill="none" stroke="#33261d" stroke-width="6"/>';
+  svg.innerHTML=h;
+  // ランキング
+  const tot=ranks.reduce((s,x)=>s+x.w,0);
+  $("rank").innerHTML='<h2>今夜の出やすさ</h2>'+ranks.map(x=>'<div class="r" style="--c:'+x.col+'"><span>'+x.g.name+'</span><i style="width:'+Math.max(3,x.w/ranks[0].w*100)+'%"></i><span>'+Math.round(x.w/tot*100)+'%</span></div>').join("");
+}
+function spin(){
+  if(spinning||!SL.length) return;
+  spinning=true; $("spin").disabled=true;
+  if(ST.last) buildWheel();   // 前回のジャンルを出にくくして並べ直す
+  const sum=SL.reduce((s,x)=>s+x.w,0);
+  let r=Math.random()*sum, win=SL[0];
+  for(const x of SL){ if(r<x.w){win=x;break;} r-=x.w; }
+  const span=win.a1-win.a0;
+  const target=win.a0+span*(0.2+Math.random()*0.6);  // 区切りの中のどこか
+  const base=Math.ceil(rot/360)*360;
+  rot = base + 360*5 + (360-target);
+  $("wheel").style.transform="rotate("+rot+"deg)";
+  $("result").innerHTML=kunSay("くるくる……どれかな？");
+  setTimeout(()=>{ spinning=false; $("spin").disabled=false; show(win.g,win.col); },4100);
+}
+function show(g,col){
+  ST.last=g.name; save();
+  let ds=g.dishes.map(d=>({d,m:ST.use?dishMatch(d):[]}));
+  if(ST.use) ds=ds.filter(x=>x.m.length).sort((a,b)=>b.m.length-a.m.length||Math.random()-.5);
+  else ds.sort(()=>Math.random()-.5);
+  ds=ds.slice(0,3);
+  let why=g.say+"。";
+  if(cond.tmax!=null){ why+=" "+(dayOff?"明日":"今日")+"は最高"+Math.round(cond.tmax)+"℃、夕方の体感"+Math.round(cond.app)+"℃。"; }
+  $("result").style.setProperty("--c",col||g.color);
+  $("result").innerHTML=kunSay((dayOff?"明日":"今夜")+"は「"+g.name+"」に決まり！")+'<div class="gname">'+g.name+'</div><div class="why">'+why+'</div><ol>'+
+    ds.map(x=>'<li><b>'+x.d.name+'</b><small>'+x.d.ing.map(i=>x.m.includes(i)?'<em>'+i+'</em>':i).join("・")+(x.m.filter(w=>!x.d.ing.includes(w)).length?'　＋<em>'+x.m.filter(w=>!x.d.ing.includes(w)).join("・")+'</em>':'')+'</small></li>').join("")+
+    '</ol><div class="more">'+(ST.use?'赤い字が冷蔵庫にある食材です。':'')+' 副菜・汁物の組み合わせと作り方は <a href="../">きょうの献立</a> で。</div>';
+}
+$("spin").onclick=spin; $("hub").onclick=spin;
+load();
+</script>
+</body>
+</html>
