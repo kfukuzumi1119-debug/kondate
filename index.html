@@ -455,6 +455,37 @@ button.primary { border-radius: 4px; letter-spacing: 0.04em; }
 
 @media (max-width: 520px) { .dish-link { font-size: 1.2rem; letter-spacing: 0; } header h1 { font-size: 2rem; } }
 
+/* 絞り込み欄：パソコンは今まで通り。スマホはプルダウンと、押すと開く見出し */
+.pair { display: grid; gap: 12px; }
+.h2-sub { font-weight: 400; letter-spacing: 0; }
+.pick-select {
+  display: none; width: 100%; font: inherit; font-size: 0.95rem; color: var(--fg);
+  background: var(--surface); border: 1.5px solid var(--fg); border-radius: 4px; padding: 8px 10px;
+}
+.pick-select:focus-visible { outline: 2px solid var(--soy); outline-offset: 2px; }
+.fold > summary { list-style: none; display: flex; align-items: baseline; gap: 8px; cursor: pointer; }
+.fold > summary::-webkit-details-marker { display: none; }
+.fold-sel { display: none; }
+@media (max-width: 859px) {
+  .pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pair .times { display: none; }
+  .pick-select { display: block; }
+  .pair .h2-sub { display: none; }
+  .fold {
+    border: 1.5px solid var(--line); background: var(--surface); border-radius: 4px; padding: 10px 12px;
+  }
+  .fold > summary { min-height: 28px; align-items: center; }
+  .fold > summary h2 { margin: 0; flex: none; }
+  .fold-sel {
+    display: block; flex: 1; min-width: 0; font-size: 0.82rem; color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .fold > summary::after { content: "▼"; font-size: 0.7rem; color: var(--leaf); flex: none; }
+  .fold[open] > summary::after { content: "▲"; }
+  .fold[open] > .chips { margin-top: 10px; }
+  .cols .pantry, .pantry { gap: 10px; }
+}
+
 /* ご意見箱とページ下 */
 .feedback { border: 1px solid var(--line); border-radius: 2px; background: var(--surface); }
 .about { border-top: 3px double var(--line); }
@@ -1243,36 +1274,69 @@ function renderPantry() {
   const savedTime = loadTime();
   const savedGenre = loadGenre();
   const savedGoals = loadGoals();
+  // スマホでは、ジャンルと時間はプルダウン、目的と食材は見出しを押すと開く形にする
+  const fold = (name, chips) => `
+    <details class="group fold">
+      <summary><h2>${name}</h2><span class="fold-sel"></span></summary>
+      <div class="chips">${chips}</div>
+    </details>`;
   pantry.innerHTML = `
-    <div class="group">
-      <h2>ジャンル</h2>
-      <div class="times genres" role="radiogroup" aria-label="ジャンル">
-        ${GENRES.map(g => `<span class="time"><input type="radio" name="genre" id="genre-${g.key}" value="${g.key}"${g.key === savedGenre ? ' checked' : ''}><label for="genre-${g.key}">${g.label}</label></span>`).join('')}
+    <div class="pair">
+      <div class="group">
+        <h2>ジャンル</h2>
+        <select class="pick-select" data-for="genre" aria-label="ジャンル">
+          ${GENRES.map(g => `<option value="${g.key}"${g.key === savedGenre ? ' selected' : ''}>${g.label}</option>`).join('')}
+        </select>
+        <div class="times genres" role="radiogroup" aria-label="ジャンル">
+          ${GENRES.map(g => `<span class="time"><input type="radio" name="genre" id="genre-${g.key}" value="${g.key}"${g.key === savedGenre ? ' checked' : ''}><label for="genre-${g.key}">${g.label}</label></span>`).join('')}
+        </div>
       </div>
-    </div>
-    <div class="group">
-      <h2>調理時間（1品あたりの上限）</h2>
-      <div class="times" role="radiogroup" aria-label="調理時間">
-        ${TIME_LIMITS.map(v => `<span class="time"><input type="radio" name="time" id="time-${v}" value="${v}"${v === savedTime ? ' checked' : ''}><label for="time-${v}">${v ? v + '分' : 'こだわらない'}</label></span>`).join('')}
+      <div class="group">
+        <h2>調理時間<span class="h2-sub">（1品あたりの上限）</span></h2>
+        <select class="pick-select" data-for="time" aria-label="調理時間">
+          ${TIME_LIMITS.map(v => `<option value="${v}"${v === savedTime ? ' selected' : ''}>${v ? v + '分以内' : 'こだわらない'}</option>`).join('')}
+        </select>
+        <div class="times" role="radiogroup" aria-label="調理時間">
+          ${TIME_LIMITS.map(v => `<span class="time"><input type="radio" name="time" id="time-${v}" value="${v}"${v === savedTime ? ' checked' : ''}><label for="time-${v}">${v ? v + '分' : 'こだわらない'}</label></span>`).join('')}
+        </div>
       </div>
-    </div>
-    <div class="group">
-      <h2>目的（栄養の目安）</h2>
-      <div class="chips">
-        ${GOALS.map(x => `<span class="chip goal"><input type="checkbox" id="goal-${x.key}" value="${x.key}"${savedGoals.includes(x.key) ? ' checked' : ''}><label for="goal-${x.key}">${x.label}</label></span>`).join('')}
-      </div>
-    </div>` + GROUPS.map(g => `
-    <div class="group">
-      <h2>${g.name}</h2>
-      <div class="chips">
-        ${g.items.map(item => {
-          const id = 'ing-' + ALL_ITEMS.indexOf(item);
-          return `<span class="chip"><input type="checkbox" id="${id}" value="${item}"${saved.has(item) ? ' checked' : ''}><label for="${id}">${item}</label></span>`;
-        }).join('')}
-      </div>
-    </div>`).join('') + `
+    </div>` +
+    fold('目的（栄養の目安）', GOALS.map(x => `<span class="chip goal"><input type="checkbox" id="goal-${x.key}" value="${x.key}"${savedGoals.includes(x.key) ? ' checked' : ''}><label for="goal-${x.key}">${x.label}</label></span>`).join('')) +
+    GROUPS.map(g => fold(g.name, g.items.map(item => {
+      const id = 'ing-' + ALL_ITEMS.indexOf(item);
+      return `<span class="chip"><input type="checkbox" id="${id}" value="${item}"${saved.has(item) ? ' checked' : ''}><label for="${id}">${item}</label></span>`;
+    }).join(''))).join('') + `
     <div class="pantry-foot"><span id="count"></span><button class="link" id="clear" type="button">チェックをすべてはずす</button></div>`;
+  applyFoldOpen();
 }
+
+// パソコンでは全部開いておき、スマホでは閉じておく
+const wideScreen = window.matchMedia('(min-width: 860px)');
+function applyFoldOpen() {
+  pantry.querySelectorAll('.fold').forEach(d => { d.open = wideScreen.matches; });
+}
+wideScreen.addEventListener('change', applyFoldOpen);
+
+// 閉じていても選んだものが見えるように、見出しの横に書く。プルダウンの表示も合わせる
+function updateFolds() {
+  pantry.querySelectorAll('.fold').forEach(d => {
+    const names = [...d.querySelectorAll('input:checked')].map(el => el.nextElementSibling.textContent);
+    d.querySelector('.fold-sel').textContent = names.length
+      ? (names.length > 3 ? `${names.slice(0, 3).join('、')} ほか${names.length - 3}つ` : names.join('、'))
+      : '選んでいません';
+  });
+  pantry.querySelectorAll('.pick-select').forEach(sel => {
+    sel.value = sel.dataset.for === 'genre' ? genre() : String(timeLimit());
+  });
+}
+
+// プルダウンを選んだら、同じ値のボタンを選んだことにする（ふだんの処理より先に動かす）
+pantry.addEventListener('change', e => {
+  const sel = e.target.closest('.pick-select');
+  if (!sel) return;
+  const radio = pantry.querySelector(`input[name="${sel.dataset.for}"][value="${sel.value}"]`);
+  if (radio) radio.checked = true;
+}, true);
 
 // 選んだ食材のうち、まだ使っていないものを多く使う料理を優先する
 function score(dish, selected, remaining) {
@@ -1387,6 +1451,7 @@ function render(animate) {
       </article>`;
   }).join('');
 
+  updateFolds();
   document.getElementById('kunText').textContent = kunSay(selected, leftover, limit, g);
   if (animate) {
     const kun = document.getElementById('kunSvg');
