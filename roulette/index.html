@@ -165,7 +165,7 @@ footer a{color:var(--sub)}
 </main>
 
 <footer>
-  天気データ：<a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>（CC BY 4.0）<br>
+  天気データ：<a href="https://www.met.no/" target="_blank" rel="noopener">MET Norway</a>（ノルウェー気象研究所、CC BY 4.0）の予報をもとに hibitool が計算<br>
   <a href="https://hibitool.com/">日々のツール（hibitool.com）</a> ・ <a href="https://hibitool.com/privacy.html">プライバシーポリシー</a> ・ <a href="https://kondate.hibitool.com/">きょうの献立</a>
 </footer>
 
@@ -248,7 +248,7 @@ let W=null, T=null, cond=null;
 async function load(){
   const p=PRESETS.find(x=>x[0]===ST.city);
   $("wx").innerHTML='<div style="flex:1 1 100%">'+p[0]+'の天気を読み込んでいます…</div>';
-  const u="https://api.open-meteo.com/v1/forecast?latitude="+p[1]+"&longitude="+p[2]+"&hourly=apparent_temperature,relative_humidity_2m,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FTokyo&forecast_days=3";
+  const u="https://push.hibitool.com/wx?lat="+p[1]+"&lon="+p[2]+"&past_days=0&forecast_days=3";
   try{ W=await fetch(u).then(r=>{if(!r.ok)throw 0;return r.json();}); }
   catch(e){ W=null; }
   calc();
